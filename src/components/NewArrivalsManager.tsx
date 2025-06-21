@@ -1,7 +1,10 @@
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Image, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Image, Save, X, AlertTriangle } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { newArrivalSchema } from '../lib/validationSchemas';
+import { sanitizeInput, sanitizeUrl } from '../lib/auth';
+import { z } from 'zod';
 
 interface NewArrival {
   id: number;
@@ -35,44 +38,102 @@ export const NewArrivalsManager = () => {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<NewArrival>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAdd = () => {
-    const newArrival: NewArrival = {
-      id: Date.now(),
-      name: formData.name || '',
-      description: formData.description || '',
-      price: formData.price || 0,
-      imageUrl: formData.imageUrl || '/placeholder.svg',
-      category: formData.category || '',
-      featured: formData.featured || false,
-      customerPhoto: formData.customerPhoto,
-      customerName: formData.customerName,
-      createdAt: new Date()
-    };
-    
-    setNewArrivals([...newArrivals, newArrival]);
-    setIsAddingNew(false);
-    setFormData({});
+    setErrors({});
+
+    try {
+      // Sanitize inputs
+      const sanitizedData = {
+        name: sanitizeInput(formData.name || ''),
+        description: sanitizeInput(formData.description || ''),
+        price: formData.price || 0,
+        imageUrl: sanitizeUrl(formData.imageUrl || ''),
+        category: formData.category || '',
+        featured: formData.featured || false,
+        customerPhoto: formData.customerPhoto ? sanitizeUrl(formData.customerPhoto) : '',
+        customerName: formData.customerName ? sanitizeInput(formData.customerName) : ''
+      };
+
+      // Validate
+      const validatedData = newArrivalSchema.parse(sanitizedData);
+
+      const newArrival: NewArrival = {
+        id: Date.now(),
+        ...validatedData,
+        createdAt: new Date()
+      };
+      
+      setNewArrivals([...newArrivals, newArrival]);
+      setIsAddingNew(false);
+      setFormData({});
+      console.log('New arrival added successfully:', newArrival.name);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+      console.error('Validation error:', error);
+    }
   };
 
   const handleEdit = (arrival: NewArrival) => {
     setEditingId(arrival.id);
     setFormData(arrival);
+    setErrors({});
   };
 
   const handleUpdate = () => {
-    setNewArrivals(newArrivals.map(arrival => 
-      arrival.id === editingId 
-        ? { ...arrival, ...formData }
-        : arrival
-    ));
-    setEditingId(null);
-    setFormData({});
+    setErrors({});
+
+    try {
+      // Sanitize inputs
+      const sanitizedData = {
+        name: sanitizeInput(formData.name || ''),
+        description: sanitizeInput(formData.description || ''),
+        price: formData.price || 0,
+        imageUrl: sanitizeUrl(formData.imageUrl || ''),
+        category: formData.category || '',
+        featured: formData.featured || false,
+        customerPhoto: formData.customerPhoto ? sanitizeUrl(formData.customerPhoto) : '',
+        customerName: formData.customerName ? sanitizeInput(formData.customerName) : ''
+      };
+
+      // Validate
+      const validatedData = newArrivalSchema.parse(sanitizedData);
+
+      setNewArrivals(newArrivals.map(arrival => 
+        arrival.id === editingId 
+          ? { ...arrival, ...validatedData }
+          : arrival
+      ));
+      setEditingId(null);
+      setFormData({});
+      console.log('New arrival updated successfully');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+      console.error('Validation error:', error);
+    }
   };
 
   const handleDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this item?')) {
       setNewArrivals(newArrivals.filter(arrival => arrival.id !== id));
+      console.log('New arrival deleted:', id);
     }
   };
 
@@ -80,28 +141,40 @@ export const NewArrivalsManager = () => {
     setIsAddingNew(false);
     setEditingId(null);
     setFormData({});
+    setErrors({});
   };
 
   const renderForm = () => (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
           <input
             type="text"
             value={formData.name || ''}
             onChange={(e) => setFormData({...formData, name: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.name ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Enter product name"
+            maxLength={200}
           />
+          {errors.name && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.name}
+            </p>
+          )}
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
           <select
             value={formData.category || ''}
             onChange={(e) => setFormData({...formData, category: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.category ? 'border-red-300' : 'border-gray-300'
+            }`}
           >
             <option value="">Select category</option>
             <option value="Kanjivaram">Kanjivaram</option>
@@ -109,17 +182,33 @@ export const NewArrivalsManager = () => {
             <option value="Bandhani">Bandhani</option>
             <option value="Block Print">Block Print</option>
           </select>
+          {errors.category && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.category}
+            </p>
+          )}
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹) *</label>
           <input
             type="number"
             value={formData.price || ''}
             onChange={(e) => setFormData({...formData, price: parseInt(e.target.value)})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.price ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Enter price"
+            min="1"
+            max="1000000"
           />
+          {errors.price && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.price}
+            </p>
+          )}
         </div>
         
         <div>
@@ -128,9 +217,17 @@ export const NewArrivalsManager = () => {
             type="url"
             value={formData.imageUrl || ''}
             onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.imageUrl ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Enter image URL"
           />
+          {errors.imageUrl && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.imageUrl}
+            </p>
+          )}
         </div>
         
         <div>
@@ -139,9 +236,18 @@ export const NewArrivalsManager = () => {
             type="text"
             value={formData.customerName || ''}
             onChange={(e) => setFormData({...formData, customerName: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.customerName ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Customer who purchased"
+            maxLength={100}
           />
+          {errors.customerName && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.customerName}
+            </p>
+          )}
         </div>
         
         <div>
@@ -150,20 +256,37 @@ export const NewArrivalsManager = () => {
             type="url"
             value={formData.customerPhoto || ''}
             onChange={(e) => setFormData({...formData, customerPhoto: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.customerPhoto ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Customer photo URL"
           />
+          {errors.customerPhoto && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.customerPhoto}
+            </p>
+          )}
         </div>
         
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
           <textarea
             value={formData.description || ''}
             onChange={(e) => setFormData({...formData, description: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.description ? 'border-red-300' : 'border-gray-300'
+            }`}
             rows={3}
             placeholder="Enter product description"
+            maxLength={500}
           />
+          {errors.description && (
+            <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {errors.description}
+            </p>
+          )}
         </div>
         
         <div className="md:col-span-2">
@@ -221,10 +344,15 @@ export const NewArrivalsManager = () => {
                   src={arrival.imageUrl} 
                   alt={arrival.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
+              ) : null}
+              <div className={arrival.imageUrl ? 'hidden' : ''}>
                 <Image className="w-12 h-12 text-gray-400" />
-              )}
+              </div>
             </div>
             
             <div className="p-4">
@@ -246,6 +374,9 @@ export const NewArrivalsManager = () => {
                       src={arrival.customerPhoto} 
                       alt={arrival.customerName}
                       className="w-6 h-6 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   )}
                   <span>Worn by {arrival.customerName}</span>

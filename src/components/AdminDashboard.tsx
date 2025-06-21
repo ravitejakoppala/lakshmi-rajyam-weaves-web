@@ -1,9 +1,9 @@
-
-import { useState } from 'react';
-import { X, Plus, Edit, Trash2, Package, Users, BarChart3, Settings, Store, Image, Link } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Plus, Edit, Trash2, Package, Users, BarChart3, Settings, Store, Image, Link, LogOut } from 'lucide-react';
 import { ProductManager } from './ProductManager';
 import { StoreSettingsManager } from './StoreSettingsManager';
 import { NewArrivalsManager } from './NewArrivalsManager';
+import { validateSession, clearSession } from '../lib/auth';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -11,6 +11,27 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('products');
+
+  // Session validation on component mount and interval
+  useEffect(() => {
+    const checkSession = () => {
+      if (!validateSession()) {
+        console.log('Session expired, logging out');
+        handleLogout();
+      }
+    };
+
+    checkSession();
+    const interval = setInterval(checkSession, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogout = () => {
+    clearSession();
+    console.log('Admin logged out');
+    onClose();
+  };
 
   const tabs = [
     { id: 'products', label: 'Products', icon: Package },
@@ -46,12 +67,22 @@ export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">

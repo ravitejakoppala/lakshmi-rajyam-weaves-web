@@ -1,7 +1,10 @@
 
 import { useState } from 'react';
-import { Save, MapPin, Phone, Instagram, Mail, Link as LinkIcon, Edit2 } from 'lucide-react';
+import { Save, MapPin, Phone, Instagram, Mail, Link as LinkIcon, Edit2, AlertTriangle } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { storeSettingsSchema } from '../lib/validationSchemas';
+import { sanitizeInput, sanitizeUrl } from '../lib/auth';
+import { z } from 'zod';
 
 interface StoreSettings {
   storeName: string;
@@ -48,16 +51,57 @@ export const StoreSettingsManager = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState(storeSettings);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSave = () => {
-    setStoreSettings(editedSettings);
-    setIsEditing(false);
-    console.log('Store settings updated:', editedSettings);
+    setErrors({});
+
+    try {
+      // Sanitize all inputs
+      const sanitizedSettings = {
+        ...editedSettings,
+        storeName: sanitizeInput(editedSettings.storeName),
+        address: {
+          street: sanitizeInput(editedSettings.address.street),
+          city: sanitizeInput(editedSettings.address.city),
+          pincode: sanitizeInput(editedSettings.address.pincode)
+        },
+        email: sanitizeInput(editedSettings.email),
+        socialMedia: {
+          instagram: sanitizeUrl(editedSettings.socialMedia.instagram),
+          facebook: sanitizeUrl(editedSettings.socialMedia.facebook),
+          youtube: sanitizeUrl(editedSettings.socialMedia.youtube),
+          whatsapp: sanitizeInput(editedSettings.socialMedia.whatsapp)
+        },
+        hours: {
+          weekdays: sanitizeInput(editedSettings.hours.weekdays),
+          weekends: sanitizeInput(editedSettings.hours.weekends)
+        }
+      };
+
+      // Validate
+      const validatedSettings = storeSettingsSchema.parse(sanitizedSettings);
+      
+      setStoreSettings(validatedSettings);
+      setIsEditing(false);
+      console.log('Store settings updated successfully');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          const path = err.path.join('.');
+          fieldErrors[path] = err.message;
+        });
+        setErrors(fieldErrors);
+      }
+      console.error('Validation error:', error);
+    }
   };
 
   const handleCancel = () => {
     setEditedSettings(storeSettings);
     setIsEditing(false);
+    setErrors({});
   };
 
   const updateSetting = (path: string, value: string) => {
@@ -123,8 +167,17 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.storeName : storeSettings.storeName}
               onChange={(e) => updateSetting('storeName', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors.storeName ? 'border-red-300' : 'border-gray-300'
+              }`}
+              maxLength={100}
             />
+            {errors.storeName && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.storeName}
+              </p>
+            )}
           </div>
           
           <div>
@@ -134,8 +187,17 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.phone : storeSettings.phone}
               onChange={(e) => updateSetting('phone', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors.phone ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="+91-XXXXX-XXXXX"
             />
+            {errors.phone && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.phone}
+              </p>
+            )}
           </div>
           
           <div>
@@ -145,8 +207,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.email : storeSettings.email}
               onChange={(e) => updateSetting('email', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors.email ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors.email && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.email}
+              </p>
+            )}
           </div>
           
           <div>
@@ -156,8 +226,17 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.address.street : storeSettings.address.street}
               onChange={(e) => updateSetting('address.street', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['address.street'] ? 'border-red-300' : 'border-gray-300'
+              }`}
+              maxLength={200}
             />
+            {errors['address.street'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['address.street']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -167,8 +246,17 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.address.city : storeSettings.address.city}
               onChange={(e) => updateSetting('address.city', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['address.city'] ? 'border-red-300' : 'border-gray-300'
+              }`}
+              maxLength={100}
             />
+            {errors['address.city'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['address.city']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -178,8 +266,18 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.address.pincode : storeSettings.address.pincode}
               onChange={(e) => updateSetting('address.pincode', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['address.pincode'] ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="XXXXXX"
+              maxLength={6}
             />
+            {errors['address.pincode'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['address.pincode']}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -202,8 +300,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.instagram : storeSettings.socialMedia.instagram}
               onChange={(e) => updateSetting('socialMedia.instagram', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['socialMedia.instagram'] ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors['socialMedia.instagram'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['socialMedia.instagram']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -216,8 +322,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.facebook : storeSettings.socialMedia.facebook}
               onChange={(e) => updateSetting('socialMedia.facebook', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['socialMedia.facebook'] ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors['socialMedia.facebook'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['socialMedia.facebook']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -227,8 +341,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.youtube : storeSettings.socialMedia.youtube}
               onChange={(e) => updateSetting('socialMedia.youtube', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['socialMedia.youtube'] ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors['socialMedia.youtube'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['socialMedia.youtube']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -241,8 +363,17 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.whatsapp : storeSettings.socialMedia.whatsapp}
               onChange={(e) => updateSetting('socialMedia.whatsapp', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['socialMedia.whatsapp'] ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="+91-XXXXX-XXXXX"
             />
+            {errors['socialMedia.whatsapp'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['socialMedia.whatsapp']}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -259,8 +390,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.hours.weekdays : storeSettings.hours.weekdays}
               onChange={(e) => updateSetting('hours.weekdays', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['hours.weekdays'] ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors['hours.weekdays'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['hours.weekdays']}
+              </p>
+            )}
           </div>
           
           <div>
@@ -270,8 +409,16 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.hours.weekends : storeSettings.hours.weekends}
               onChange={(e) => updateSetting('hours.weekends', e.target.value)}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+                errors['hours.weekends'] ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors['hours.weekends'] && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors['hours.weekends']}
+              </p>
+            )}
           </div>
         </div>
       </div>

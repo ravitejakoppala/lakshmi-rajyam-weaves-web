@@ -1,6 +1,9 @@
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter, AlertTriangle } from 'lucide-react';
+import { productSchema } from '../lib/validationSchemas';
+import { sanitizeInput } from '../lib/auth';
+import { z } from 'zod';
 
 export const ProductManager = () => {
   const [products, setProducts] = useState([
@@ -38,29 +41,43 @@ export const ProductManager = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddProduct = (newProduct: any) => {
-    const product = {
-      ...newProduct,
-      id: Date.now(),
-      status: 'Active'
-    };
-    setProducts([...products, product]);
-    setShowAddForm(false);
+    try {
+      const validatedProduct = productSchema.parse(newProduct);
+      const product = {
+        ...validatedProduct,
+        id: Date.now(),
+        status: 'Active'
+      };
+      setProducts([...products, product]);
+      setShowAddForm(false);
+      console.log('Product added successfully:', product.name);
+    } catch (error) {
+      console.error('Validation error:', error);
+    }
   };
 
   const handleEditProduct = (updatedProduct: any) => {
-    setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-    setEditingProduct(null);
+    try {
+      const validatedProduct = productSchema.parse(updatedProduct);
+      setProducts(products.map(p => p.id === updatedProduct.id ? {...validatedProduct, id: updatedProduct.id} : p));
+      setEditingProduct(null);
+      console.log('Product updated successfully:', validatedProduct.name);
+    } catch (error) {
+      console.error('Validation error:', error);
+    }
   };
 
   const handleDeleteProduct = (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
       setProducts(products.filter(p => p.id !== id));
+      console.log('Product deleted:', id);
     }
   };
 
+  const sanitizedSearchTerm = sanitizeInput(searchTerm);
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    product.name.toLowerCase().includes(sanitizedSearchTerm.toLowerCase()) ||
+    product.category.toLowerCase().includes(sanitizedSearchTerm.toLowerCase())
   );
 
   return (
@@ -87,6 +104,7 @@ export const ProductManager = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            maxLength={100}
           />
         </div>
         <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
@@ -166,7 +184,7 @@ export const ProductManager = () => {
   );
 };
 
-// Product Form Component
+// Product Form Component with validation
 const ProductForm = ({ product, onSave, onCancel }: any) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -175,15 +193,40 @@ const ProductForm = ({ product, onSave, onCancel }: any) => {
     stock: product?.stock || '',
     description: product?.description || ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...product,
-      ...formData,
-      price: parseInt(formData.price),
-      stock: parseInt(formData.stock)
-    });
+    setErrors({});
+
+    try {
+      // Sanitize inputs
+      const sanitizedData = {
+        name: sanitizeInput(formData.name),
+        category: formData.category,
+        price: parseInt(formData.price.toString()),
+        stock: parseInt(formData.stock.toString()),
+        description: sanitizeInput(formData.description)
+      };
+
+      // Validate
+      const validatedData = productSchema.parse(sanitizedData);
+      
+      onSave({
+        ...product,
+        ...validatedData
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    }
   };
 
   return (
@@ -202,9 +245,18 @@ const ProductForm = ({ product, onSave, onCancel }: any) => {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.name ? 'border-red-300' : 'border-gray-300'
+              }`}
               required
+              maxLength={200}
             />
+            {errors.name && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.name}
+              </p>
+            )}
           </div>
 
           <div>
@@ -227,9 +279,19 @@ const ProductForm = ({ product, onSave, onCancel }: any) => {
               type="number"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.price ? 'border-red-300' : 'border-gray-300'
+              }`}
               required
+              min="1"
+              max="1000000"
             />
+            {errors.price && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.price}
+              </p>
+            )}
           </div>
 
           <div>
@@ -238,9 +300,19 @@ const ProductForm = ({ product, onSave, onCancel }: any) => {
               type="number"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.stock ? 'border-red-300' : 'border-gray-300'
+              }`}
               required
+              min="0"
+              max="10000"
             />
+            {errors.stock && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.stock}
+              </p>
+            )}
           </div>
 
           <div>
@@ -250,6 +322,7 @@ const ProductForm = ({ product, onSave, onCancel }: any) => {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={1000}
             />
           </div>
 
