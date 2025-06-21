@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Save, MapPin, Phone, Instagram, Mail, Link as LinkIcon, Edit2, AlertTriangle } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -82,7 +81,29 @@ export const StoreSettingsManager = () => {
       // Validate
       const validatedSettings = storeSettingsSchema.parse(sanitizedSettings);
       
-      setStoreSettings(validatedSettings);
+      // Create complete StoreSettings object with all required properties
+      const completeSettings: StoreSettings = {
+        storeName: validatedSettings.storeName,
+        address: {
+          street: validatedSettings.address.street,
+          city: validatedSettings.address.city,
+          pincode: validatedSettings.address.pincode
+        },
+        phone: validatedSettings.phone,
+        email: validatedSettings.email,
+        socialMedia: {
+          instagram: validatedSettings.socialMedia.instagram || '',
+          facebook: validatedSettings.socialMedia.facebook || '',
+          youtube: validatedSettings.socialMedia.youtube || '',
+          whatsapp: validatedSettings.socialMedia.whatsapp
+        },
+        hours: {
+          weekdays: validatedSettings.hours.weekdays,
+          weekends: validatedSettings.hours.weekends
+        }
+      };
+      
+      setStoreSettings(completeSettings);
       setIsEditing(false);
       console.log('Store settings updated successfully');
     } catch (error) {
