@@ -5,8 +5,19 @@ import { productSchema } from '../lib/validationSchemas';
 import { sanitizeInput } from '../lib/auth';
 import { z } from 'zod';
 
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  status: string;
+  image: string;
+  description?: string;
+}
+
 export const ProductManager = () => {
-  const [products, setProducts] = useState([
+  const [products, setProducts] = useState<Product[]>([
     {
       id: 1,
       name: 'Royal Kanjivaram Silk Saree',
@@ -37,16 +48,21 @@ export const ProductManager = () => {
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddProduct = (newProduct: any) => {
     try {
       const validatedProduct = productSchema.parse(newProduct);
-      const product = {
-        ...validatedProduct,
+      const product: Product = {
         id: Date.now(),
-        status: 'Active'
+        name: validatedProduct.name,
+        category: validatedProduct.category,
+        price: validatedProduct.price,
+        stock: validatedProduct.stock,
+        status: validatedProduct.status || 'Active',
+        image: 'placeholder',
+        description: validatedProduct.description
       };
       setProducts([...products, product]);
       setShowAddForm(false);
@@ -59,7 +75,15 @@ export const ProductManager = () => {
   const handleEditProduct = (updatedProduct: any) => {
     try {
       const validatedProduct = productSchema.parse(updatedProduct);
-      setProducts(products.map(p => p.id === updatedProduct.id ? {...validatedProduct, id: updatedProduct.id} : p));
+      setProducts(products.map(p => p.id === updatedProduct.id ? {
+        ...p,
+        name: validatedProduct.name,
+        category: validatedProduct.category,
+        price: validatedProduct.price,
+        stock: validatedProduct.stock,
+        status: validatedProduct.status || 'Active',
+        description: validatedProduct.description
+      } : p));
       setEditingProduct(null);
       console.log('Product updated successfully:', validatedProduct.name);
     } catch (error) {

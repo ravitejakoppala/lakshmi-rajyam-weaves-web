@@ -59,13 +59,13 @@ export const StoreSettingsManager = () => {
     try {
       // Sanitize all inputs
       const sanitizedSettings = {
-        ...editedSettings,
         storeName: sanitizeInput(editedSettings.storeName),
         address: {
           street: sanitizeInput(editedSettings.address.street),
           city: sanitizeInput(editedSettings.address.city),
           pincode: sanitizeInput(editedSettings.address.pincode)
         },
+        phone: sanitizeInput(editedSettings.phone),
         email: sanitizeInput(editedSettings.email),
         socialMedia: {
           instagram: sanitizeUrl(editedSettings.socialMedia.instagram),
@@ -111,6 +111,7 @@ export const StoreSettingsManager = () => {
       let current: any = updated;
       
       for (let i = 0; i < keys.length - 1; i++) {
+        current[keys[i]] = { ...current[keys[i]] };
         current = current[keys[i]];
       }
       current[keys[keys.length - 1]] = value;

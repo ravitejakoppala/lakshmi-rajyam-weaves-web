@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Image, Save, X, AlertTriangle } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -59,9 +58,17 @@ export const NewArrivalsManager = () => {
       // Validate
       const validatedData = newArrivalSchema.parse(sanitizedData);
 
+      // Create NewArrival with all required properties
       const newArrival: NewArrival = {
         id: Date.now(),
-        ...validatedData,
+        name: validatedData.name,
+        description: validatedData.description,
+        price: validatedData.price,
+        imageUrl: validatedData.imageUrl || '',
+        category: validatedData.category,
+        featured: validatedData.featured,
+        customerPhoto: validatedData.customerPhoto || '',
+        customerName: validatedData.customerName || '',
         createdAt: new Date()
       };
       
@@ -110,7 +117,17 @@ export const NewArrivalsManager = () => {
 
       setNewArrivals(newArrivals.map(arrival => 
         arrival.id === editingId 
-          ? { ...arrival, ...validatedData }
+          ? { 
+              ...arrival, 
+              name: validatedData.name,
+              description: validatedData.description,
+              price: validatedData.price,
+              imageUrl: validatedData.imageUrl || '',
+              category: validatedData.category,
+              featured: validatedData.featured,
+              customerPhoto: validatedData.customerPhoto || '',
+              customerName: validatedData.customerName || ''
+            }
           : arrival
       ));
       setEditingId(null);
