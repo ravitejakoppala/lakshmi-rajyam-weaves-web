@@ -1,7 +1,9 @@
 
 import { useState } from 'react';
-import { X, Plus, Edit, Trash2, Package, Users, BarChart3, Settings } from 'lucide-react';
+import { X, Plus, Edit, Trash2, Package, Users, BarChart3, Settings, Store, Image, Link } from 'lucide-react';
 import { ProductManager } from './ProductManager';
+import { StoreSettingsManager } from './StoreSettingsManager';
+import { NewArrivalsManager } from './NewArrivalsManager';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -14,7 +16,9 @@ export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
     { id: 'products', label: 'Products', icon: Package },
     { id: 'orders', label: 'Orders', icon: BarChart3 },
     { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'store-settings', label: 'Store Settings', icon: Store },
+    { id: 'new-arrivals', label: 'New Arrivals', icon: Image },
+    { id: 'settings', label: 'General', icon: Settings }
   ];
 
   const renderContent = () => {
@@ -25,6 +29,10 @@ export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
         return <OrdersManager />;
       case 'customers':
         return <CustomersManager />;
+      case 'store-settings':
+        return <StoreSettingsManager />;
+      case 'new-arrivals':
+        return <NewArrivalsManager />;
       case 'settings':
         return <SettingsManager />;
       default:
