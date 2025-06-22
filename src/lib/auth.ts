@@ -106,13 +106,18 @@ export const hashPassword = async (password: string): Promise<string> => {
     .join('');
 };
 
-// Updated admin credentials with new username and password
+// Updated admin credentials with correct hash for LRS@Ravi
 const ADMIN_CREDENTIALS = {
   username: 'raviteja',
-  passwordHash: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3' // LRS@Ravi
+  passwordHash: 'e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317' // LRS@Ravi
 };
 
 export const verifyAdminCredentials = async (username: string, password: string): Promise<boolean> => {
+  console.log('Verifying credentials for username:', username);
   const hashedInput = await hashPassword(password);
-  return username === ADMIN_CREDENTIALS.username && hashedInput === ADMIN_CREDENTIALS.passwordHash;
+  console.log('Input password hash:', hashedInput);
+  console.log('Expected hash:', ADMIN_CREDENTIALS.passwordHash);
+  const isValid = username === ADMIN_CREDENTIALS.username && hashedInput === ADMIN_CREDENTIALS.passwordHash;
+  console.log('Credentials valid:', isValid);
+  return isValid;
 };
