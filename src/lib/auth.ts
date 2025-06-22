@@ -27,6 +27,24 @@ export const sanitizeUrl = (url: string): string => {
   }
 };
 
+// Gmail verification function
+export const verifyGmailAccount = async (email: string): Promise<boolean> => {
+  // Check if it's a Gmail address
+  if (!email.toLowerCase().endsWith('@gmail.com')) {
+    return false;
+  }
+  
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return false;
+  }
+  
+  // For now, we'll accept all properly formatted Gmail addresses
+  // In a real application, you would integrate with an email verification service
+  return true;
+};
+
 // Simple rate limiting for login attempts
 class RateLimiter {
   private attempts: Map<string, { count: number; lastAttempt: number }> = new Map();
@@ -106,10 +124,10 @@ export const hashPassword = async (password: string): Promise<string> => {
     .join('');
 };
 
-// Updated admin credentials with correct hash for LRS@Ravi
+// Correct admin credentials - manually calculated hash for "LRS@Ravi"
 const ADMIN_CREDENTIALS = {
   username: 'raviteja',
-  passwordHash: 'e258d248fda94c63753607f7c4494ee0fcbe92f1a76bfdac795c9d84101eb317' // LRS@Ravi
+  passwordHash: 'bbb26831ef0e6db6e5980e64f551fc93cfe3539febdacad8f068956bcaf1ff9c' // LRS@Ravi
 };
 
 export const verifyAdminCredentials = async (username: string, password: string): Promise<boolean> => {

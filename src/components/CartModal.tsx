@@ -7,11 +7,16 @@ interface CartModalProps {
 }
 
 export const CartModal = ({ onClose }: CartModalProps) => {
-  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+
+  const handleCheckout = () => {
+    // Implement checkout logic here
+    alert('Checkout functionality will be implemented soon!');
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -20,7 +25,7 @@ export const CartModal = ({ onClose }: CartModalProps) => {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200 z-[10000] relative"
           >
             <X className="w-5 h-5" />
           </button>
@@ -35,7 +40,7 @@ export const CartModal = ({ onClose }: CartModalProps) => {
                 Your cart is empty
               </h3>
               <p className="text-gray-500 dark:text-gray-500 mb-6">
-                Add some beautiful sarees to your cart!
+                Start shopping and add items to your cart!
               </p>
               <button
                 onClick={onClose}
@@ -45,8 +50,8 @@ export const CartModal = ({ onClose }: CartModalProps) => {
               </button>
             </div>
           ) : (
-            <>
-              <div className="space-y-4 max-h-96 overflow-y-auto mb-6">
+            <div className="space-y-4">
+              <div className="max-h-96 overflow-y-auto space-y-4">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex-1">
@@ -60,14 +65,16 @@ export const CartModal = ({ onClose }: CartModalProps) => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 p-1 rounded transition-colors duration-200"
+                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 p-1 rounded"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                        <span className="w-8 text-center font-semibold text-gray-900 dark:text-white">
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 p-1 rounded transition-colors duration-200"
+                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 p-1 rounded"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -84,7 +91,6 @@ export const CartModal = ({ onClose }: CartModalProps) => {
                 ))}
               </div>
               
-              {/* Total and Actions */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xl font-bold text-gray-900 dark:text-white">
@@ -97,11 +103,14 @@ export const CartModal = ({ onClose }: CartModalProps) => {
                     Clear Cart
                   </button>
                 </div>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors duration-200">
+                <button
+                  onClick={handleCheckout}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors duration-200"
+                >
                   Proceed to Checkout
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
