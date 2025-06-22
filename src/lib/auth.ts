@@ -106,10 +106,10 @@ export const hashPassword = async (password: string): Promise<string> => {
     .join('');
 };
 
-// Secure admin credentials (in production, this should be in environment variables)
+// Updated admin credentials with new username and password
 const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9' // admin123
+  username: 'raviteja',
+  passwordHash: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3' // LRS@Ravi
 };
 
 export const verifyAdminCredentials = async (username: string, password: string): Promise<boolean> => {

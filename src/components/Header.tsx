@@ -5,13 +5,23 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useDeliverySettings } from '../hooks/useDeliverySettings';
 import { useSearch } from '../hooks/useSearch';
+import { useCart } from '../hooks/useCart';
+import { useFavorites } from '../hooks/useFavorites';
+import { FavoritesModal } from './FavoritesModal';
+import { CartModal } from './CartModal';
+import { ProfileModal } from './ProfileModal';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [showCart, setShowCart] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { settings: deliverySettings } = useDeliverySettings();
   const { query, setQuery, results, isLoading } = useSearch();
+  const { getTotalItems } = useCart();
+  const { favorites } = useFavorites();
 
   const categories = [
     { name: 'Kanjivaram', path: '/category/kanjivaram' },
@@ -78,23 +88,36 @@ export const Header = () => {
             </button>
 
             {/* Wishlist */}
-            <button className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative">
+            <button 
+              onClick={() => setShowFavorites(true)}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative"
+            >
               <Heart className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                0
-              </span>
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              )}
             </button>
 
             {/* Cart */}
-            <button className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative">
+            <button 
+              onClick={() => setShowCart(true)}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative"
+            >
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                0
-              </span>
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
             </button>
 
             {/* User Account */}
-            <button className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+            <button 
+              onClick={() => setShowProfile(true)}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            >
               <User className="w-5 h-5" />
             </button>
 
@@ -216,6 +239,11 @@ export const Header = () => {
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      {showFavorites && <FavoritesModal onClose={() => setShowFavorites(false)} />}
+      {showCart && <CartModal onClose={() => setShowCart(false)} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
     </header>
   );
 };
