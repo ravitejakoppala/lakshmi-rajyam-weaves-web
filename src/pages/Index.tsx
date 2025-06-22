@@ -12,18 +12,20 @@ import { Newsletter } from '../components/Newsletter';
 import { Footer } from '../components/Footer';
 import { AdminLogin } from '../components/AdminLogin';
 import { useState } from 'react';
+import { Settings } from 'lucide-react';
 
 const Index = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
-      {/* Admin Login Button */}
+      {/* Admin Login Button - Floating */}
       <button
         onClick={() => setShowAdminLogin(true)}
-        className="fixed top-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors duration-200 text-sm"
+        className="fixed bottom-6 right-6 z-40 bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200 group"
+        title="Admin Access"
       >
-        Admin Login
+        <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200" />
       </button>
 
       {/* Admin Login Modal */}
