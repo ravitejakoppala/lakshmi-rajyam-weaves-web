@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import { CategoryPage } from "./pages/CategoryPage";
 import { NewArrivalsPage } from "./pages/NewArrivalsPage";
 import { SalePage } from "./pages/SalePage";
-import { NotFound } from "./pages/NotFound";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
