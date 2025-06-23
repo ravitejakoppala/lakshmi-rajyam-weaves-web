@@ -23,10 +23,15 @@ export const ProductManager = () => {
     category_id: '',
     stock_quantity: '',
     image_url: '',
+    images: [] as string[],
+    sku: '',
     is_featured: false,
     is_new_arrival: false,
     is_on_sale: false,
-    status: 'active' as const
+    status: 'active' as const,
+    weight: '',
+    dimensions: null,
+    tags: [] as string[]
   });
 
   const filteredProducts = products.filter(product =>
@@ -37,12 +42,24 @@ export const ProductManager = () => {
     e.preventDefault();
     try {
       const productData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description || null,
         price: parseFloat(formData.price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
-        stock_quantity: parseInt(formData.stock_quantity) || 0,
         discount_percentage: formData.original_price ? 
-          Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : 0
+          Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : 0,
+        category_id: formData.category_id || null,
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        image_url: formData.image_url || null,
+        images: formData.images,
+        sku: formData.sku || null,
+        is_featured: formData.is_featured,
+        is_new_arrival: formData.is_new_arrival,
+        is_on_sale: formData.is_on_sale,
+        status: formData.status,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        dimensions: formData.dimensions,
+        tags: formData.tags
       };
 
       if (editingProduct) {
@@ -61,10 +78,15 @@ export const ProductManager = () => {
         category_id: '',
         stock_quantity: '',
         image_url: '',
+        images: [],
+        sku: '',
         is_featured: false,
         is_new_arrival: false,
         is_on_sale: false,
-        status: 'active'
+        status: 'active',
+        weight: '',
+        dimensions: null,
+        tags: []
       });
     } catch (error) {
       console.error('Error saving product:', error);
@@ -79,12 +101,17 @@ export const ProductManager = () => {
       price: product.price.toString(),
       original_price: product.original_price?.toString() || '',
       category_id: product.category_id || '',
-      stock_quantity: product.stock_quantity.toString(),
+      stock_quantity: product.stock_quantity?.toString() || '0',
       image_url: product.image_url || '',
-      is_featured: product.is_featured,
-      is_new_arrival: product.is_new_arrival,
-      is_on_sale: product.is_on_sale,
-      status: product.status
+      images: product.images || [],
+      sku: product.sku || '',
+      is_featured: product.is_featured || false,
+      is_new_arrival: product.is_new_arrival || false,
+      is_on_sale: product.is_on_sale || false,
+      status: product.status || 'active',
+      weight: product.weight?.toString() || '',
+      dimensions: product.dimensions,
+      tags: product.tags || []
     });
   };
 
@@ -97,15 +124,15 @@ export const ProductManager = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
           Product Management
         </h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="w-full sm:w-auto text-sm">
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Add Product
             </Button>
           </DialogTrigger>
@@ -123,23 +150,23 @@ export const ProductManager = () => {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
           <Input
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-8 sm:pl-10 text-sm"
           />
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="w-full sm:w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+          <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="w-full sm:w-16 h-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
@@ -147,7 +174,7 @@ export const ProductManager = () => {
                     className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <Image className="w-8 h-8 text-gray-400" />
+                  <Image className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 )}
               </div>
               
@@ -156,39 +183,39 @@ export const ProductManager = () => {
                   <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
                     {product.name}
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(product)}
-                      className="text-xs sm:text-sm"
+                      className="text-xs sm:text-sm px-2 py-1 h-auto"
                     >
-                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      <Edit className="w-3 h-3 mr-1" />
                       Edit
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => deleteProduct(product.id)}
-                      className="text-xs sm:text-sm"
+                      className="text-xs sm:text-sm px-2 py-1 h-auto"
                     >
-                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      <Trash2 className="w-3 h-3 mr-1" />
                       Delete
                     </Button>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   <span>Price: ₹{product.price}</span>
-                  <span>Stock: {product.stock_quantity}</span>
+                  <span>Stock: {product.stock_quantity || 0}</span>
                   <span>Status: {product.status}</span>
                   <span>SKU: {product.sku || 'N/A'}</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-1">
-                  {product.is_featured && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Featured</span>}
-                  {product.is_new_arrival && <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">New</span>}
-                  {product.is_on_sale && <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">Sale</span>}
+                  {product.is_featured && <span className="px-1 sm:px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Featured</span>}
+                  {product.is_new_arrival && <span className="px-1 sm:px-2 py-1 bg-green-100 text-green-800 rounded text-xs">New</span>}
+                  {product.is_on_sale && <span className="px-1 sm:px-2 py-1 bg-red-100 text-red-800 rounded text-xs">Sale</span>}
                 </div>
               </div>
             </div>
@@ -216,24 +243,25 @@ export const ProductManager = () => {
 };
 
 const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
-  <form onSubmit={onSubmit} className="space-y-4">
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
-        <Label htmlFor="name">Product Name *</Label>
+        <Label htmlFor="name" className="text-sm">Product Name *</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           required
+          className="text-sm"
         />
       </div>
       <div>
-        <Label htmlFor="category">Category</Label>
+        <Label htmlFor="category" className="text-sm">Category</Label>
         <Select
           value={formData.category_id}
           onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="text-sm">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
@@ -248,18 +276,19 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
     </div>
 
     <div>
-      <Label htmlFor="description">Description</Label>
+      <Label htmlFor="description" className="text-sm">Description</Label>
       <Textarea
         id="description"
         value={formData.description}
         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
         rows={3}
+        className="text-sm"
       />
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
       <div>
-        <Label htmlFor="price">Price *</Label>
+        <Label htmlFor="price" className="text-sm">Price *</Label>
         <Input
           id="price"
           type="number"
@@ -267,48 +296,64 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
           value={formData.price}
           onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
           required
+          className="text-sm"
         />
       </div>
       <div>
-        <Label htmlFor="original_price">Original Price</Label>
+        <Label htmlFor="original_price" className="text-sm">Original Price</Label>
         <Input
           id="original_price"
           type="number"
           step="0.01"
           value={formData.original_price}
           onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
+          className="text-sm"
         />
       </div>
       <div>
-        <Label htmlFor="stock">Stock Quantity</Label>
+        <Label htmlFor="stock" className="text-sm">Stock Quantity</Label>
         <Input
           id="stock"
           type="number"
           value={formData.stock_quantity}
           onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
+          className="text-sm"
         />
       </div>
     </div>
 
-    <div>
-      <Label htmlFor="image_url">Image URL</Label>
-      <Input
-        id="image_url"
-        type="url"
-        value={formData.image_url}
-        onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-        placeholder="https://example.com/image.jpg"
-      />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div>
+        <Label htmlFor="image_url" className="text-sm">Image URL</Label>
+        <Input
+          id="image_url"
+          type="url"
+          value={formData.image_url}
+          onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+          placeholder="https://example.com/image.jpg"
+          className="text-sm"
+        />
+      </div>
+      <div>
+        <Label htmlFor="sku" className="text-sm">SKU</Label>
+        <Input
+          id="sku"
+          value={formData.sku}
+          onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+          placeholder="Product SKU"
+          className="text-sm"
+        />
+      </div>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
-        <Label htmlFor="status">Status</Label>
+        <Label htmlFor="status" className="text-sm">Status</Label>
         <Select
           value={formData.status}
           onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -318,16 +363,27 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
           </SelectContent>
         </Select>
       </div>
+      <div>
+        <Label htmlFor="weight" className="text-sm">Weight (kg)</Label>
+        <Input
+          id="weight"
+          type="number"
+          step="0.01"
+          value={formData.weight}
+          onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
+          className="text-sm"
+        />
+      </div>
     </div>
 
-    <div className="flex flex-col sm:flex-row gap-4 pt-4">
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
       <div className="flex items-center space-x-2">
         <Switch
           id="featured"
           checked={formData.is_featured}
           onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: checked }))}
         />
-        <Label htmlFor="featured">Featured</Label>
+        <Label htmlFor="featured" className="text-sm">Featured</Label>
       </div>
       <div className="flex items-center space-x-2">
         <Switch
@@ -335,7 +391,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
           checked={formData.is_new_arrival}
           onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_new_arrival: checked }))}
         />
-        <Label htmlFor="new_arrival">New Arrival</Label>
+        <Label htmlFor="new_arrival" className="text-sm">New Arrival</Label>
       </div>
       <div className="flex items-center space-x-2">
         <Switch
@@ -343,11 +399,11 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
           checked={formData.is_on_sale}
           onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_on_sale: checked }))}
         />
-        <Label htmlFor="on_sale">On Sale</Label>
+        <Label htmlFor="on_sale" className="text-sm">On Sale</Label>
       </div>
     </div>
 
-    <Button type="submit" className="w-full">
+    <Button type="submit" className="w-full text-sm">
       Save Product
     </Button>
   </form>
