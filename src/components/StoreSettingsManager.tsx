@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Save, MapPin, Phone, Instagram, Mail, Link as LinkIcon, Edit2, AlertTriangle } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -144,13 +145,13 @@ export const StoreSettingsManager = () => {
   return (
     <div className="p-6 space-y-8">
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold text-gray-800">Store Settings</h3>
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-white">Store Settings</h3>
         <div className="flex gap-3">
           {isEditing ? (
             <>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
@@ -175,22 +176,22 @@ export const StoreSettingsManager = () => {
       </div>
 
       {/* Store Information */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
           <MapPin className="w-5 h-5 text-blue-600" />
           Store Information
         </h4>
         
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Store Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Store Name</label>
             <input
               type="text"
               value={isEditing ? editedSettings.storeName : storeSettings.storeName}
               onChange={(e) => updateSetting('storeName', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors.storeName ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors.storeName ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               maxLength={100}
             />
@@ -203,14 +204,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
             <input
               type="tel"
               value={isEditing ? editedSettings.phone : storeSettings.phone}
               onChange={(e) => updateSetting('phone', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors.phone ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors.phone ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="+91-XXXXX-XXXXX"
             />
@@ -223,14 +224,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
             <input
               type="email"
               value={isEditing ? editedSettings.email : storeSettings.email}
               onChange={(e) => updateSetting('email', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors.email ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors.email ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors.email && (
@@ -242,14 +243,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Street Address</label>
             <input
               type="text"
               value={isEditing ? editedSettings.address.street : storeSettings.address.street}
               onChange={(e) => updateSetting('address.street', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['address.street'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['address.street'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               maxLength={200}
             />
@@ -262,14 +263,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
             <input
               type="text"
               value={isEditing ? editedSettings.address.city : storeSettings.address.city}
               onChange={(e) => updateSetting('address.city', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['address.city'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['address.city'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               maxLength={100}
             />
@@ -282,14 +283,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pincode</label>
             <input
               type="text"
               value={isEditing ? editedSettings.address.pincode : storeSettings.address.pincode}
               onChange={(e) => updateSetting('address.pincode', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['address.pincode'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['address.pincode'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="XXXXXX"
               maxLength={6}
@@ -305,15 +306,15 @@ export const StoreSettingsManager = () => {
       </div>
 
       {/* Social Media Links */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
           <LinkIcon className="w-5 h-5 text-blue-600" />
           Social Media Links
         </h4>
         
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
               <Instagram className="w-4 h-4" />
               Instagram URL
             </label>
@@ -322,8 +323,8 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.instagram : storeSettings.socialMedia.instagram}
               onChange={(e) => updateSetting('socialMedia.instagram', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['socialMedia.instagram'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['socialMedia.instagram'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors['socialMedia.instagram'] && (
@@ -335,7 +336,7 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Facebook URL
             </label>
@@ -344,8 +345,8 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.facebook : storeSettings.socialMedia.facebook}
               onChange={(e) => updateSetting('socialMedia.facebook', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['socialMedia.facebook'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['socialMedia.facebook'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors['socialMedia.facebook'] && (
@@ -357,14 +358,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">YouTube URL</label>
             <input
               type="url"
               value={isEditing ? editedSettings.socialMedia.youtube : storeSettings.socialMedia.youtube}
               onChange={(e) => updateSetting('socialMedia.youtube', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['socialMedia.youtube'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['socialMedia.youtube'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors['socialMedia.youtube'] && (
@@ -376,7 +377,7 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
               <Phone className="w-4 h-4" />
               WhatsApp Number
             </label>
@@ -385,8 +386,8 @@ export const StoreSettingsManager = () => {
               value={isEditing ? editedSettings.socialMedia.whatsapp : storeSettings.socialMedia.whatsapp}
               onChange={(e) => updateSetting('socialMedia.whatsapp', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['socialMedia.whatsapp'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['socialMedia.whatsapp'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="+91-XXXXX-XXXXX"
             />
@@ -401,19 +402,19 @@ export const StoreSettingsManager = () => {
       </div>
 
       {/* Store Hours */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-gray-800 mb-4">Store Hours</h4>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Store Hours</h4>
         
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Monday - Saturday</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monday - Saturday</label>
             <input
               type="text"
               value={isEditing ? editedSettings.hours.weekdays : storeSettings.hours.weekdays}
               onChange={(e) => updateSetting('hours.weekdays', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['hours.weekdays'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['hours.weekdays'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors['hours.weekdays'] && (
@@ -425,14 +426,14 @@ export const StoreSettingsManager = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Sunday</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sunday</label>
             <input
               type="text"
               value={isEditing ? editedSettings.hours.weekends : storeSettings.hours.weekends}
               onChange={(e) => updateSetting('hours.weekends', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
-                errors['hours.weekends'] ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors['hours.weekends'] ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
               }`}
             />
             {errors['hours.weekends'] && (
