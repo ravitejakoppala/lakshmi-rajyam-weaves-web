@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Image } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -9,12 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const ProductManager = () => {
   const { products, categories, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -33,6 +35,32 @@ export const ProductManager = () => {
     dimensions: null,
     tags: [] as string[]
   });
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `product-${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -145,6 +173,8 @@ export const ProductManager = () => {
               setFormData={setFormData}
               categories={categories}
               onSubmit={handleSubmit}
+              onImageUpload={handleImageUpload}
+              uploading={uploading}
             />
           </DialogContent>
         </Dialog>
@@ -234,6 +264,8 @@ export const ProductManager = () => {
               setFormData={setFormData}
               categories={categories}
               onSubmit={handleSubmit}
+              onImageUpload={handleImageUpload}
+              uploading={uploading}
             />
           </DialogContent>
         </Dialog>
@@ -242,7 +274,7 @@ export const ProductManager = () => {
   );
 };
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
+const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading }: any) => (
   <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
@@ -324,15 +356,33 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
-        <Label htmlFor="image_url" className="text-sm">Image URL</Label>
-        <Input
-          id="image_url"
-          type="url"
-          value={formData.image_url}
-          onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-          placeholder="https://example.com/image.jpg"
-          className="text-sm"
-        />
+        <Label htmlFor="image_url" className="text-sm">Product Image</Label>
+        <div className="space-y-2">
+          <Input
+            id="image_url"
+            type="url"
+            value={formData.image_url}
+            onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+            placeholder="Image URL or upload below"
+            className="text-sm"
+          />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Or upload:</span>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && onImageUpload) onImageUpload(file);
+              }}
+              disabled={uploading}
+              className="text-xs"
+            />
+          </div>
+          {uploading && (
+            <p className="text-xs text-blue-600">Uploading image...</p>
+          )}
+        </div>
       </div>
       <div>
         <Label htmlFor="sku" className="text-sm">SKU</Label>
@@ -403,7 +453,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit }: any) => (
       </div>
     </div>
 
-    <Button type="submit" className="w-full text-sm">
+    <Button type="submit" className="w-full text-sm" disabled={uploading}>
       Save Product
     </Button>
   </form>
