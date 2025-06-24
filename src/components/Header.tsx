@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ShoppingBag, Menu, X, Search, User, Moon, Sun, Heart } from 'lucide-react';
+import { ShoppingBag, Menu, X, Search, User, Moon, Sun, Heart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useDeliverySettings } from '../hooks/useDeliverySettings';
@@ -10,6 +10,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { FavoritesModal } from './FavoritesModal';
 import { CartModal } from './CartModal';
 import { ProfileModal } from './ProfileModal';
+import { AdminLogin } from './AdminLogin';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +18,7 @@ export const Header = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { settings: deliverySettings } = useDeliverySettings();
   const { query, setQuery, results, isLoading } = useSearch();
@@ -85,6 +87,15 @@ export const Header = () => {
               className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            {/* Admin Access */}
+            <button 
+              onClick={() => setShowAdmin(true)}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+              title="Admin Access"
+            >
+              <Shield className="w-5 h-5" />
             </button>
 
             {/* Wishlist */}
@@ -157,6 +168,16 @@ export const Header = () => {
                   {category.name}
                 </Link>
               ))}
+              <button
+                onClick={() => {
+                  setShowAdmin(true);
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Access
+              </button>
             </nav>
           </div>
         </div>
@@ -244,6 +265,7 @@ export const Header = () => {
       {showFavorites && <FavoritesModal onClose={() => setShowFavorites(false)} />}
       {showCart && <CartModal onClose={() => setShowCart(false)} />}
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showAdmin && <AdminLogin onClose={() => setShowAdmin(false)} />}
     </header>
   );
 };
