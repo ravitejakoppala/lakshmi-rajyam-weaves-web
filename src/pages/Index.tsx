@@ -2,7 +2,6 @@
 import { Hero } from '../components/Hero';
 import { FeaturedCollections } from '../components/FeaturedCollections';
 import { CategoryShowcase } from '../components/CategoryShowcase';
-import { NewArrivalsSection } from '../components/NewArrivalsSection';
 import { Testimonials } from '../components/Testimonials';
 import { Newsletter } from '../components/Newsletter';
 import { Header } from '../components/Header';
@@ -17,7 +16,6 @@ const Index = () => {
         <Hero />
         <FeaturedCollections />
         <CategoryShowcase />
-        <NewArrivalsSection />
         <Testimonials />
         <Newsletter />
       </main>
