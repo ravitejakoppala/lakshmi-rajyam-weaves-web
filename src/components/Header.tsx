@@ -1,16 +1,19 @@
 
 import { useState } from 'react';
-import { ShoppingBag, Menu, X, Search, User, Moon, Sun, Heart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useDeliverySettings } from '../hooks/useDeliverySettings';
-import { useSearch } from '../hooks/useSearch';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
 import { FavoritesModal } from './FavoritesModal';
 import { CartModal } from './CartModal';
 import { ProfileModal } from './ProfileModal';
 import { AdminLogin } from './AdminLogin';
+import { TopBar } from './header/TopBar';
+import { Navigation } from './header/Navigation';
+import { ActionButtons } from './header/ActionButtons';
+import { MobileMenu } from './header/MobileMenu';
+import { SearchModal } from './header/SearchModal';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,9 +22,9 @@ export const Header = () => {
   const [showCart, setShowCart] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  
   const { theme, toggleTheme } = useTheme();
   const { settings: deliverySettings } = useDeliverySettings();
-  const { query, setQuery, results, isLoading } = useSearch();
   const { getTotalItems } = useCart();
   const { favorites } = useFavorites();
 
@@ -36,17 +39,7 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
-      {/* Top Bar - Only show if delivery is enabled */}
-      {deliverySettings.deliveryEnabled && deliverySettings.showPromotionalContent && (
-        <div className="bg-blue-600 dark:bg-blue-700 text-white py-2">
-          <div className="container mx-auto px-6 text-center text-sm">
-            <span>
-              Free shipping on orders above ₹{deliverySettings.freeShippingThreshold.toLocaleString()}
-              {deliverySettings.codAvailable && ' | COD Available'}
-            </span>
-          </div>
-        </div>
-      )}
+      <TopBar deliverySettings={deliverySettings} />
 
       {/* Main Header */}
       <div className="container mx-auto px-6">
@@ -58,208 +51,34 @@ export const Header = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                to={category.path}
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
+          <Navigation categories={categories} />
 
-          {/* Right Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-
-            {/* Admin Access */}
-            <button 
-              onClick={() => setShowAdmin(true)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-              title="Admin Access"
-            >
-              <Shield className="w-5 h-5" />
-            </button>
-
-            {/* Wishlist */}
-            <button 
-              onClick={() => setShowFavorites(true)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative"
-            >
-              <Heart className="w-5 h-5" />
-              {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {favorites.length}
-                </span>
-              )}
-            </button>
-
-            {/* Cart */}
-            <button 
-              onClick={() => setShowCart(true)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 relative"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
-              )}
-            </button>
-
-            {/* User Account */}
-            <button 
-              onClick={() => setShowProfile(true)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            >
-              <User className="w-5 h-5" />
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="lg:hidden p-2 text-gray-700 dark:text-gray-300"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
+          <ActionButtons
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onSearchClick={() => setIsSearchOpen(true)}
+            onAdminClick={() => setShowAdmin(true)}
+            onFavoritesClick={() => setShowFavorites(true)}
+            onCartClick={() => setShowCart(true)}
+            onProfileClick={() => setShowProfile(true)}
+            onMenuClick={() => setIsMenuOpen(true)}
+            favoritesCount={favorites.length}
+            cartItemsCount={getTotalItems()}
+          />
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsMenuOpen(false)} />
-          <div className="absolute right-0 top-0 h-full w-80 bg-white dark:bg-gray-900 shadow-xl">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">Menu</span>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="p-2 text-gray-500 dark:text-gray-400"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <nav className="p-6 space-y-4">
-              {categories.map((category) => (
-                <Link
-                  key={category.name}
-                  to={category.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
-                >
-                  {category.name}
-                </Link>
-              ))}
-              <button
-                onClick={() => {
-                  setShowAdmin(true);
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-2 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
-              >
-                <Shield className="w-4 h-4" />
-                Admin Access
-              </button>
-            </nav>
-          </div>
-        </div>
-      )}
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onAdminClick={() => setShowAdmin(true)}
+        categories={categories}
+      />
 
-      {/* Search Modal */}
-      {isSearchOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-20">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-2xl mx-4">
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <Search className="w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for sarees, collections..."
-                  className="flex-1 text-lg border-none outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-500"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  autoFocus
-                />
-                <button
-                  onClick={() => setIsSearchOpen(false)}
-                  className="text-gray-500 dark:text-gray-400"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              {/* Search Results */}
-              {query && (
-                <div className="max-h-96 overflow-y-auto">
-                  {isLoading ? (
-                    <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                      Searching...
-                    </div>
-                  ) : results.length > 0 ? (
-                    <div className="space-y-2">
-                      {results.map((result) => (
-                        <button
-                          key={result.id}
-                          className="w-full text-left p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                          onClick={() => {
-                            setIsSearchOpen(false);
-                            setQuery('');
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {result.title}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {result.type === 'product' && result.category && `${result.category} • `}
-                                {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-                              </div>
-                            </div>
-                            {result.price && (
-                              <div className="text-blue-600 dark:text-blue-400 font-medium">
-                                ₹{result.price.toLocaleString()}
-                              </div>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                      No results found for "{query}"
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {!query && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Popular searches: Kanjivaram silk, wedding sarees, festival collection
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {/* Modals */}
       {showFavorites && <FavoritesModal onClose={() => setShowFavorites(false)} />}

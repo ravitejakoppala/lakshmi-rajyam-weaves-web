@@ -84,7 +84,11 @@ export const useProducts = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching products:', error);
+        throw error;
+      }
+      
       const transformedProducts = (data || []).map(transformDbProduct);
       setProducts(transformedProducts);
     } catch (error) {
@@ -100,7 +104,11 @@ export const useProducts = () => {
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching categories:', error);
+        throw error;
+      }
+      
       const transformedCategories = (data || []).map(transformDbCategory);
       setCategories(transformedCategories);
     } catch (error) {
@@ -118,15 +126,15 @@ export const useProducts = () => {
           description: product.description,
           price: product.price,
           original_price: product.original_price,
-          discount_percentage: product.discount_percentage || 0,
+          discount_percentage: product.discount_percentage ?? 0,
           category_id: product.category_id,
-          stock_quantity: product.stock_quantity || 0,
+          stock_quantity: product.stock_quantity ?? 0,
           image_url: product.image_url,
           images: product.images || [],
-          is_featured: product.is_featured || false,
-          is_new_arrival: product.is_new_arrival || false,
-          is_on_sale: product.is_on_sale || false,
-          status: product.status || 'active',
+          is_featured: product.is_featured ?? false,
+          is_new_arrival: product.is_new_arrival ?? false,
+          is_on_sale: product.is_on_sale ?? false,
+          status: product.status ?? 'active',
           sku: product.sku,
           weight: product.weight,
           dimensions: product.dimensions,
@@ -135,7 +143,11 @@ export const useProducts = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error adding product:', error);
+        throw error;
+      }
+      
       const transformedProduct = transformDbProduct(data);
       setProducts(prev => [transformedProduct, ...prev]);
       toast.success('Product added successfully');
@@ -174,7 +186,11 @@ export const useProducts = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error updating product:', error);
+        throw error;
+      }
+      
       const transformedProduct = transformDbProduct(data);
       setProducts(prev => prev.map(p => p.id === id ? transformedProduct : p));
       toast.success('Product updated successfully');
@@ -193,7 +209,11 @@ export const useProducts = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error deleting product:', error);
+        throw error;
+      }
+      
       setProducts(prev => prev.filter(p => p.id !== id));
       toast.success('Product deleted successfully');
     } catch (error) {
@@ -206,8 +226,13 @@ export const useProducts = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchProducts(), fetchCategories()]);
-      setLoading(false);
+      try {
+        await Promise.all([fetchProducts(), fetchCategories()]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
