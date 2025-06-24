@@ -1,8 +1,18 @@
 
+import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Skeleton } from './ui/skeleton';
 
 export const CategoryShowcase = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading time
+  useState(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  });
+
   const categories = [
     {
       name: "Kanjivaram Silk",
@@ -39,15 +49,39 @@ export const CategoryShowcase = () => {
   ];
 
   const handleCategoryClick = (path: string) => {
-    // Scroll to top when navigating to category page
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <Skeleton className="h-12 w-72 mx-auto mb-6" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                <Skeleton className="h-56 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Shop by Category
           </h2>
@@ -63,14 +97,15 @@ export const CategoryShowcase = () => {
               key={index}
               to={category.path}
               onClick={() => handleCategoryClick(category.path)}
-              className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+              className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 animate-fade-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Category Image */}
               <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600">
                 <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-20 dark:opacity-30`}></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-gray-600 dark:text-gray-300">
-                    <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                       <div className={`w-10 h-10 bg-gradient-to-br ${category.color} rounded-full`}></div>
                     </div>
                     <p className="font-semibold text-lg">{category.name}</p>

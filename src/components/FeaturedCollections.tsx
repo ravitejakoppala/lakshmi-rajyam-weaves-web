@@ -2,9 +2,17 @@
 import { useState } from 'react';
 import { ArrowRight, Heart, ShoppingBag, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Skeleton } from './ui/skeleton';
 
 export const FeaturedCollections = () => {
-  const [activeCollection, setActiveCollection] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading time
+  useState(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  });
 
   const collections = [
     {
@@ -45,15 +53,46 @@ export const FeaturedCollections = () => {
     }
   ];
 
+  const handleImageLoad = (id: number) => {
+    setImagesLoaded(prev => ({ ...prev, [id]: true }));
+  };
+
   const handleCollectionClick = (path: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-white dark:bg-gray-800 transition-colors duration-200">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <Skeleton className="h-12 w-80 mx-auto mb-6" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                <Skeleton className="h-80 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-white dark:bg-gray-800 transition-colors duration-200">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Featured Collections
           </h2>
@@ -67,14 +106,21 @@ export const FeaturedCollections = () => {
           {collections.map((collection, index) => (
             <div
               key={collection.id}
-              className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700"
+              className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 animate-fade-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Image */}
               <div className="relative h-80 overflow-hidden">
+                {!imagesLoaded[collection.id] && (
+                  <Skeleton className="absolute inset-0 w-full h-full" />
+                )}
                 <img
                   src={collection.image}
                   alt={collection.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
+                    imagesLoaded[collection.id] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={() => handleImageLoad(collection.id)}
                 />
                 <div className="absolute top-4 left-4">
                   <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -128,7 +174,7 @@ export const FeaturedCollections = () => {
         </div>
 
         {/* View All Button */}
-        <div className="text-center">
+        <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <Link
             to="/products"
             onClick={() => handleCollectionClick("/products")}
