@@ -20,6 +20,7 @@ export const CategoryManager = () => {
     image_url: ''
   });
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -49,14 +50,20 @@ export const CategoryManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+
     try {
       if (editingCategory) {
         const { error } = await supabase
           .from('categories')
           .update({
-            name: formData.name,
-            description: formData.description,
-            image_url: formData.image_url
+            name: formData.name.trim(),
+            description: formData.description?.trim() || null,
+            image_url: formData.image_url || null
           })
           .eq('id', editingCategory.id);
 
@@ -67,9 +74,9 @@ export const CategoryManager = () => {
         const { error } = await supabase
           .from('categories')
           .insert([{
-            name: formData.name,
-            description: formData.description,
-            image_url: formData.image_url
+            name: formData.name.trim(),
+            description: formData.description?.trim() || null,
+            image_url: formData.image_url || null
           }]);
 
         if (error) throw error;
@@ -78,7 +85,7 @@ export const CategoryManager = () => {
       }
 
       setFormData({ name: '', description: '', image_url: '' });
-      refreshCategories();
+      await refreshCategories();
     } catch (error) {
       console.error('Error saving category:', error);
       toast.error('Failed to save category');
@@ -95,20 +102,34 @@ export const CategoryManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      try {
-        const { error } = await supabase
-          .from('categories')
-          .delete()
-          .eq('id', id);
+    if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+      return;
+    }
 
-        if (error) throw error;
-        toast.success('Category deleted successfully');
-        refreshCategories();
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        toast.error('Failed to delete category');
+    try {
+      setDeleting(id);
+      console.log('Deleting category with ID:', id);
+      
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
       }
+      
+      console.log('Category deleted successfully');
+      toast.success('Category deleted successfully');
+      
+      // Force refresh the categories
+      await refreshCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -179,6 +200,7 @@ export const CategoryManager = () => {
                   size="sm"
                   onClick={() => handleEdit(category)}
                   className="text-xs px-2 py-1 h-auto"
+                  disabled={deleting === category.id}
                 >
                   <Edit className="w-3 h-3 mr-1" />
                   Edit
@@ -188,9 +210,14 @@ export const CategoryManager = () => {
                   size="sm"
                   onClick={() => handleDelete(category.id)}
                   className="text-xs px-2 py-1 h-auto"
+                  disabled={deleting === category.id}
                 >
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Delete
+                  {deleting === category.id ? (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                  ) : (
+                    <Trash2 className="w-3 h-3 mr-1" />
+                  )}
+                  {deleting === category.id ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </div>

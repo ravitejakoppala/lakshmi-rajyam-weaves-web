@@ -17,6 +17,7 @@ export const ProductManager = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -103,6 +104,10 @@ export const ProductManager = () => {
     }
 
     try {
+      setSaving(true);
+      console.log('Saving product with data:', formData);
+
+      // Prepare clean data for database
       const productData = {
         name: formData.name.trim(),
         description: formData.description?.trim() || null,
@@ -111,18 +116,20 @@ export const ProductManager = () => {
         discount_percentage: formData.original_price ? 
           Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : 0,
         category_id: formData.category_id || null,
-        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
         image_url: formData.image_url || null,
-        images: formData.images,
+        images: Array.isArray(formData.images) ? formData.images : [],
         sku: formData.sku?.trim() || null,
-        is_featured: formData.is_featured,
-        is_new_arrival: formData.is_new_arrival,
-        is_on_sale: formData.is_on_sale,
-        status: formData.status,
+        is_featured: Boolean(formData.is_featured),
+        is_new_arrival: Boolean(formData.is_new_arrival),
+        is_on_sale: Boolean(formData.is_on_sale),
+        status: formData.status || 'active',
         weight: formData.weight ? parseFloat(formData.weight) : null,
         dimensions: formData.dimensions,
-        tags: formData.tags
+        tags: Array.isArray(formData.tags) ? formData.tags : []
       };
+
+      console.log('Cleaned product data:', productData);
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
@@ -155,29 +162,31 @@ export const ProductManager = () => {
       });
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error('Failed to save product');
+      toast.error('Failed to save product. Please check all fields and try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleEdit = (product: any) => {
     setEditingProduct(product);
     setFormData({
-      name: product.name,
+      name: product.name || '',
       description: product.description || '',
-      price: product.price.toString(),
+      price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
       category_id: product.category_id || '',
       stock_quantity: product.stock_quantity?.toString() || '0',
       image_url: product.image_url || '',
-      images: product.images || [],
+      images: Array.isArray(product.images) ? product.images : [],
       sku: product.sku || '',
-      is_featured: product.is_featured || false,
-      is_new_arrival: product.is_new_arrival || false,
-      is_on_sale: product.is_on_sale || false,
+      is_featured: Boolean(product.is_featured),
+      is_new_arrival: Boolean(product.is_new_arrival),
+      is_on_sale: Boolean(product.is_on_sale),
       status: product.status || 'active',
       weight: product.weight?.toString() || '',
-      dimensions: product.dimensions,
-      tags: product.tags || []
+      dimensions: product.dimensions || null,
+      tags: Array.isArray(product.tags) ? product.tags : []
     });
   };
 
@@ -213,6 +222,7 @@ export const ProductManager = () => {
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
               uploading={uploading}
+              saving={saving}
             />
           </DialogContent>
         </Dialog>
@@ -304,6 +314,7 @@ export const ProductManager = () => {
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
               uploading={uploading}
+              saving={saving}
             />
           </DialogContent>
         </Dialog>
@@ -312,7 +323,7 @@ export const ProductManager = () => {
   );
 };
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading }: any) => (
+const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving }: any) => (
   <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
@@ -517,8 +528,17 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
       </div>
     </div>
 
-    <Button type="submit" className="w-full text-sm" disabled={uploading}>
-      {uploading ? 'Uploading...' : 'Save Product'}
+    <Button type="submit" className="w-full text-sm" disabled={uploading || saving}>
+      {saving ? (
+        <>
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+          Saving Product...
+        </>
+      ) : uploading ? (
+        'Uploading...'
+      ) : (
+        'Save Product'
+      )}
     </Button>
   </form>
 );
