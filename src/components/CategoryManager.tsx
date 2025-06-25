@@ -101,33 +101,49 @@ export const CategoryManager = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+  const handleDelete = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
-      setDeleting(id);
-      console.log('Deleting category with ID:', id);
+      setDeleting(categoryId);
+      console.log('Attempting to delete category:', categoryId, categoryName);
       
-      const { error } = await supabase
+      // First check if category exists
+      const { data: existingCategory, error: checkError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('id', categoryId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking category:', checkError);
+        throw new Error('Category not found');
+      }
+
+      console.log('Found category to delete:', existingCategory);
+
+      // Delete the category
+      const { error: deleteError } = await supabase
         .from('categories')
         .delete()
-        .eq('id', id);
+        .eq('id', categoryId);
 
-      if (error) {
-        console.error('Supabase delete error:', error);
-        throw error;
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
       }
+
+      console.log('Category deleted successfully from database');
       
-      console.log('Category deleted successfully');
-      toast.success('Category deleted successfully');
-      
-      // Force refresh the categories
+      // Refresh categories immediately
       await refreshCategories();
+      
+      toast.success(`Category "${categoryName}" deleted successfully`);
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error('Failed to delete category');
+      toast.error(`Failed to delete category: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(null);
     }
@@ -208,7 +224,7 @@ export const CategoryManager = () => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleDelete(category.id)}
+                  onClick={() => handleDelete(category.id, category.name)}
                   className="text-xs px-2 py-1 h-auto"
                   disabled={deleting === category.id}
                 >

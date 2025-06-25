@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Image } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -90,16 +91,39 @@ export const ProductManager = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast.error('Product name is required');
+      return false;
+    }
+    
+    if (!formData.price || isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+      toast.error('Valid price is required and must be greater than 0');
+      return false;
+    }
+
+    if (formData.original_price && (isNaN(parseFloat(formData.original_price)) || parseFloat(formData.original_price) <= 0)) {
+      toast.error('Original price must be a valid number greater than 0');
+      return false;
+    }
+
+    if (formData.stock_quantity && (isNaN(parseInt(formData.stock_quantity)) || parseInt(formData.stock_quantity) < 0)) {
+      toast.error('Stock quantity must be a valid number greater than or equal to 0');
+      return false;
+    }
+
+    if (formData.weight && (isNaN(parseFloat(formData.weight)) || parseFloat(formData.weight) <= 0)) {
+      toast.error('Weight must be a valid number greater than 0');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      toast.error('Product name is required');
-      return;
-    }
-    
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      toast.error('Valid price is required');
+    if (!validateForm()) {
       return;
     }
 
@@ -107,16 +131,16 @@ export const ProductManager = () => {
       setSaving(true);
       console.log('Saving product with data:', formData);
 
-      // Prepare clean data for database
+      // Clean and prepare data for database
       const productData = {
         name: formData.name.trim(),
         description: formData.description?.trim() || null,
         price: parseFloat(formData.price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
-        discount_percentage: formData.original_price ? 
-          Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : 0,
+        discount_percentage: formData.original_price && formData.price ? 
+          Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : null,
         category_id: formData.category_id || null,
-        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : null,
         image_url: formData.image_url || null,
         images: Array.isArray(formData.images) ? formData.images : [],
         sku: formData.sku?.trim() || null,
@@ -132,16 +156,16 @@ export const ProductManager = () => {
       console.log('Cleaned product data:', productData);
 
       if (editingProduct) {
+        console.log('Updating product:', editingProduct.id);
         await updateProduct(editingProduct.id, productData);
         setEditingProduct(null);
-        toast.success('Product updated successfully');
       } else {
+        console.log('Adding new product');
         await addProduct(productData);
         setIsAddDialogOpen(false);
-        toast.success('Product added successfully');
       }
 
-      // Reset form
+      // Reset form after successful save
       setFormData({
         name: '',
         description: '',
@@ -160,15 +184,18 @@ export const ProductManager = () => {
         dimensions: null,
         tags: []
       });
+
+      console.log('Product saved successfully');
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error('Failed to save product. Please check all fields and try again.');
+      toast.error(`Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
   };
 
   const handleEdit = (product: any) => {
+    console.log('Editing product:', product);
     setEditingProduct(product);
     setFormData({
       name: product.name || '',
@@ -176,7 +203,7 @@ export const ProductManager = () => {
       price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
       category_id: product.category_id || '',
-      stock_quantity: product.stock_quantity?.toString() || '0',
+      stock_quantity: product.stock_quantity?.toString() || '',
       image_url: product.image_url || '',
       images: Array.isArray(product.images) ? product.images : [],
       sku: product.sku || '',
