@@ -39,24 +39,65 @@ export const ProductManager = () => {
   const handleImageUpload = async (file: File) => {
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `product-${Date.now()}.${fileExt}`;
+      console.log('Starting image upload...', file.name, file.size);
       
+      // Validate file
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please select a valid image file');
+      }
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        throw new Error('File size must be less than 5MB');
+      }
+
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      console.log('Uploading to Supabase storage...');
+      
+      // First, check if the bucket exists or create it
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'product-images');
+      
+      if (!bucketExists) {
+        console.log('Creating product-images bucket...');
+        const { error: bucketError } = await supabase.storage.createBucket('product-images', {
+          public: true,
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (bucketError) {
+          console.error('Error creating bucket:', bucketError);
+          throw new Error('Failed to create storage bucket');
+        }
+      }
+
       const { data, error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error);
+        throw new Error(error.message || 'Failed to upload image');
+      }
+
+      console.log('Upload successful:', data);
 
       const { data: { publicUrl } } = supabase.storage
         .from('product-images')
         .getPublicUrl(fileName);
 
+      console.log('Public URL generated:', publicUrl);
+
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
       toast.success('Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -68,10 +109,21 @@ export const ProductManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+    
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Valid price is required');
+      return;
+    }
+
     try {
       const productData = {
-        name: formData.name,
-        description: formData.description || null,
+        name: formData.name.trim(),
+        description: formData.description?.trim() || null,
         price: parseFloat(formData.price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         discount_percentage: formData.original_price ? 
@@ -80,7 +132,7 @@ export const ProductManager = () => {
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         image_url: formData.image_url || null,
         images: formData.images,
-        sku: formData.sku || null,
+        sku: formData.sku?.trim() || null,
         is_featured: formData.is_featured,
         is_new_arrival: formData.is_new_arrival,
         is_on_sale: formData.is_on_sale,
@@ -93,11 +145,14 @@ export const ProductManager = () => {
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
         setEditingProduct(null);
+        toast.success('Product updated successfully');
       } else {
         await addProduct(productData);
         setIsAddDialogOpen(false);
+        toast.success('Product added successfully');
       }
 
+      // Reset form
       setFormData({
         name: '',
         description: '',
@@ -118,6 +173,7 @@ export const ProductManager = () => {
       });
     } catch (error) {
       console.error('Error saving product:', error);
+      toast.error('Failed to save product');
     }
   };
 
@@ -285,6 +341,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           required
           className="text-sm"
+          placeholder="Enter product name"
         />
       </div>
       <div>
@@ -315,6 +372,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
         rows={3}
         className="text-sm"
+        placeholder="Enter product description"
       />
     </div>
 
@@ -325,10 +383,12 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           id="price"
           type="number"
           step="0.01"
+          min="0"
           value={formData.price}
           onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
           required
           className="text-sm"
+          placeholder="0.00"
         />
       </div>
       <div>
@@ -337,9 +397,11 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           id="original_price"
           type="number"
           step="0.01"
+          min="0"
           value={formData.original_price}
           onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
           className="text-sm"
+          placeholder="0.00"
         />
       </div>
       <div>
@@ -347,9 +409,11 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Input
           id="stock"
           type="number"
+          min="0"
           value={formData.stock_quantity}
           onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
           className="text-sm"
+          placeholder="0"
         />
       </div>
     </div>
@@ -363,7 +427,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
             type="url"
             value={formData.image_url}
             onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-            placeholder="Image URL or upload below"
+            placeholder="Enter image URL or upload below"
             className="text-sm"
           />
           <div className="flex items-center gap-2">
@@ -380,7 +444,23 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
             />
           </div>
           {uploading && (
-            <p className="text-xs text-blue-600">Uploading image...</p>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-blue-600">Uploading image...</p>
+            </div>
+          )}
+          {formData.image_url && (
+            <div className="mt-2">
+              <img
+                src={formData.image_url}
+                alt="Preview"
+                className="w-20 h-20 object-cover rounded border"
+                onError={(e) => {
+                  console.error('Image preview error:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -419,9 +499,11 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           id="weight"
           type="number"
           step="0.01"
+          min="0"
           value={formData.weight}
           onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
           className="text-sm"
+          placeholder="0.00"
         />
       </div>
     </div>
@@ -454,7 +536,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
     </div>
 
     <Button type="submit" className="w-full text-sm" disabled={uploading}>
-      Save Product
+      {uploading ? 'Uploading...' : 'Save Product'}
     </Button>
   </form>
 );

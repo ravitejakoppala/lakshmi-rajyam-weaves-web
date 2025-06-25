@@ -13,9 +13,9 @@ export const Hero = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center w-full max-w-7xl mx-auto">
             {/* Content with improved spacing and z-index */}
-            <div className="text-white space-y-8 lg:space-y-10 z-30 relative">
+            <div className="text-white space-y-8 lg:space-y-10 z-50 relative">
               {/* Quality Badge with better positioning */}
-              <div className="flex flex-wrap items-center gap-4 mb-8">
+              <div className="flex flex-wrap items-center gap-4 mb-8 relative z-50">
                 <div className="flex items-center gap-3 bg-green-500/20 dark:bg-green-600/30 backdrop-blur-sm border border-green-400/30 dark:border-green-500/40 rounded-full px-5 py-3">
                   <Sparkles className="w-5 h-5 text-green-400 dark:text-green-300" />
                   <span className="text-green-300 dark:text-green-200 font-medium text-base">Premium Quality</span>
@@ -24,12 +24,12 @@ export const Hero = () => {
               </div>
 
               {/* Handcrafted Badge with improved styling */}
-              <div className="inline-flex items-center gap-3 bg-blue-500/20 dark:bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 dark:border-blue-500/40 rounded-full px-5 py-3 mb-8">
+              <div className="inline-flex items-center gap-3 bg-blue-500/20 dark:bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 dark:border-blue-500/40 rounded-full px-5 py-3 mb-8 relative z-50">
                 <div className="w-3 h-3 bg-blue-400 dark:bg-blue-300 rounded-full animate-pulse"></div>
                 <span className="text-blue-300 dark:text-blue-200 font-medium text-base">Handcrafted with Love</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-8">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-8 relative z-50">
                 <span className="text-white dark:text-gray-100">Timeless </span>
                 <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 dark:from-blue-300 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent">
                   Elegance
@@ -38,29 +38,29 @@ export const Hero = () => {
                 <span className="text-white dark:text-gray-100">in Every Thread</span>
               </h1>
 
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-300 dark:text-gray-400 leading-relaxed max-w-2xl mb-10">
+              <p className="text-lg sm:text-xl lg:text-2xl text-gray-300 dark:text-gray-400 leading-relaxed max-w-2xl mb-12 relative z-50">
                 Discover our exquisite collection of handwoven sarees that blend traditional artistry with contemporary elegance.
               </p>
 
-              {/* Buttons with proper spacing, z-index, and no overlap */}
-              <div className="flex flex-col sm:flex-row gap-6 pt-8 relative z-40 mb-12">
+              {/* Buttons with proper spacing, z-index, and no overlap - FIXED POSITIONING */}
+              <div className="flex flex-col sm:flex-row gap-6 relative z-50 mb-20 sm:mb-24 lg:mb-32">
                 <Link
                   to="/products"
-                  className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600 text-white px-10 py-5 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl backdrop-blur-sm border border-white/10 min-w-[200px]"
+                  className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600 text-white px-10 py-5 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl backdrop-blur-sm border border-white/10 min-w-[200px] relative z-50"
                 >
                   Shop Collection
                   <ArrowRight className="w-6 h-6" />
                 </Link>
                 <Link
                   to="/new-arrivals"
-                  className="inline-flex items-center justify-center gap-3 bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/15 text-white px-10 py-5 rounded-full font-semibold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl min-w-[180px]"
+                  className="inline-flex items-center justify-center gap-3 bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/15 text-white px-10 py-5 rounded-full font-semibold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl min-w-[180px] relative z-50"
                 >
                   New Arrivals
                 </Link>
               </div>
 
               {/* Stats with better spacing and positioning */}
-              <div className="flex flex-wrap gap-8 pt-6 relative z-30">
+              <div className="flex flex-wrap gap-8 relative z-50">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-white dark:text-gray-100">1000+</div>
                   <div className="text-gray-400 dark:text-gray-500 text-base">Happy Customers</div>
