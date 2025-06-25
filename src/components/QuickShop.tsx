@@ -1,17 +1,20 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, Star, Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
+import { useCart } from '../hooks/useCart';
+import { toast } from 'sonner';
 
 export const QuickShop = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { addToCart } = useCart();
 
   // Simulate loading time
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
-  });
+  }, []);
 
   const featuredProducts = [
     {
@@ -59,6 +62,33 @@ export const QuickShop = () => {
       category: "Block Print"
     }
   ];
+
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      addToCart({
+        id: product.id.toString(),
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      });
+      toast.success(`${product.name} added to cart!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add item to cart');
+    }
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent, productId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // TODO: Implement favorites functionality
+    toast.success('Added to favorites!');
+  };
 
   if (isLoading) {
     return (
@@ -116,10 +146,7 @@ export const QuickShop = () => {
                   </span>
                 )}
                 <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
+                  onClick={(e) => handleToggleFavorite(e, product.id)}
                   className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors z-10 transform hover:scale-110 duration-200"
                 >
                   <Heart className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -162,10 +189,7 @@ export const QuickShop = () => {
                 </div>
 
                 <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
+                  onClick={(e) => handleAddToCart(e, product)}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 text-sm sm:text-base transform hover:scale-105"
                 >
                   <ShoppingCart className="w-4 h-4" />
@@ -176,10 +200,16 @@ export const QuickShop = () => {
           ))}
         </div>
 
-        {/* View All Button */}
+        {/* View All Button - Fixed to scroll to top of products page */}
         <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <Link
             to="/products"
+            onClick={() => {
+              // Scroll to top after navigation
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 100);
+            }}
             className="group inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold text-base sm:text-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105"
           >
             <span>View All Products</span>

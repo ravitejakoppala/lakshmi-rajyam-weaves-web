@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Search, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Image, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,43 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Image compression utility
+const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    const img = new Image();
+    
+    img.onload = () => {
+      const { width, height } = img;
+      const ratio = Math.min(maxWidth / width, maxWidth / height);
+      
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(resolve, 'image/jpeg', quality);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+// AI Description Generator
+const generateAIDescription = async (imageUrl: string): Promise<string> => {
+  try {
+    const response = await supabase.functions.invoke('generate-product-description', {
+      body: { imageUrl }
+    });
+    
+    if (response.error) throw response.error;
+    return response.data?.description || '';
+  } catch (error) {
+    console.warn('AI description generation failed:', error);
+    return '';
+  }
+};
+
 export const ProductManager = () => {
   const { products, categories, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +56,7 @@ export const ProductManager = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -41,25 +79,31 @@ export const ProductManager = () => {
   const handleImageUpload = async (file: File) => {
     try {
       setUploading(true);
-      console.log('Starting image upload...', file.name, file.size);
+      console.log('Starting image upload and compression...', file.name, file.size);
       
       // Validate file
       if (!file.type.startsWith('image/')) {
         throw new Error('Please select a valid image file');
       }
       
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        throw new Error('File size must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error('File size must be less than 10MB');
       }
 
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      // Compress image
+      const compressedBlob = await compressImage(file);
+      const compressedFile = new File([compressedBlob!], file.name, { type: 'image/jpeg' });
+      
+      console.log('Image compressed from', file.size, 'to', compressedFile.size);
+
+      const fileExt = 'jpg'; // Always use jpg for compressed images
       const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
-      console.log('Uploading to Supabase storage...');
+      console.log('Uploading compressed image to Supabase storage...');
 
       const { data, error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: '3600',
           upsert: false
         });
@@ -78,7 +122,24 @@ export const ProductManager = () => {
       console.log('Public URL generated:', publicUrl);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      toast.success('Image uploaded successfully');
+      
+      // Generate AI description if enabled
+      if (publicUrl) {
+        setGeneratingDescription(true);
+        try {
+          const description = await generateAIDescription(publicUrl);
+          if (description && !formData.description) {
+            setFormData(prev => ({ ...prev, description }));
+            toast.success('AI description generated!');
+          }
+        } catch (error) {
+          console.warn('AI description failed:', error);
+        } finally {
+          setGeneratingDescription(false);
+        }
+      }
+      
+      toast.success('Image uploaded and compressed successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload image');
@@ -92,7 +153,9 @@ export const ProductManager = () => {
   );
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
+    console.log('Validating form data:', formData);
+    
+    if (!formData.name?.trim()) {
       toast.error('Product name is required');
       return false;
     }
@@ -117,6 +180,7 @@ export const ProductManager = () => {
       return false;
     }
 
+    console.log('Form validation passed');
     return true;
   };
 
@@ -131,39 +195,50 @@ export const ProductManager = () => {
       setSaving(true);
       console.log('Saving product with data:', formData);
 
-      // Clean and prepare data for database
+      // Clean and prepare data for database with explicit type conversion
       const productData = {
-        name: formData.name.trim(),
-        description: formData.description?.trim() || null,
-        price: parseFloat(formData.price),
-        original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        name: String(formData.name).trim(),
+        description: formData.description ? String(formData.description).trim() : null,
+        price: Number(parseFloat(formData.price)),
+        original_price: formData.original_price ? Number(parseFloat(formData.original_price)) : null,
         discount_percentage: formData.original_price && formData.price ? 
           Math.round(((parseFloat(formData.original_price) - parseFloat(formData.price)) / parseFloat(formData.original_price)) * 100) : null,
         category_id: formData.category_id || null,
-        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : null,
+        stock_quantity: formData.stock_quantity ? Number(parseInt(formData.stock_quantity)) : null,
         image_url: formData.image_url || null,
         images: Array.isArray(formData.images) ? formData.images : [],
-        sku: formData.sku?.trim() || null,
+        sku: formData.sku ? String(formData.sku).trim() : null,
         is_featured: Boolean(formData.is_featured),
         is_new_arrival: Boolean(formData.is_new_arrival),
         is_on_sale: Boolean(formData.is_on_sale),
-        status: formData.status || 'active',
-        weight: formData.weight ? parseFloat(formData.weight) : null,
+        status: String(formData.status) || 'active',
+        weight: formData.weight ? Number(parseFloat(formData.weight)) : null,
         dimensions: formData.dimensions,
         tags: Array.isArray(formData.tags) ? formData.tags : []
       };
 
-      console.log('Cleaned product data:', productData);
+      console.log('Cleaned product data for save:', productData);
 
+      // Validate required fields one more time
+      if (!productData.name) {
+        throw new Error('Product name is required');
+      }
+      if (isNaN(productData.price) || productData.price <= 0) {
+        throw new Error('Valid price is required');
+      }
+
+      let result;
       if (editingProduct) {
-        console.log('Updating product:', editingProduct.id);
-        await updateProduct(editingProduct.id, productData);
+        console.log('Updating existing product:', editingProduct.id);
+        result = await updateProduct(editingProduct.id, productData);
         setEditingProduct(null);
       } else {
-        console.log('Adding new product');
-        await addProduct(productData);
+        console.log('Creating new product');
+        result = await addProduct(productData);
         setIsAddDialogOpen(false);
       }
+
+      console.log('Product save result:', result);
 
       // Reset form after successful save
       setFormData({
@@ -187,8 +262,10 @@ export const ProductManager = () => {
 
       console.log('Product saved successfully');
     } catch (error) {
-      console.error('Error saving product:', error);
-      toast.error(`Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Detailed error saving product:', error);
+      // Show more detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to save product: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
@@ -220,7 +297,8 @@ export const ProductManager = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading products...</div>
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">Loading products...</span>
       </div>
     );
   }
@@ -250,6 +328,7 @@ export const ProductManager = () => {
               onImageUpload={handleImageUpload}
               uploading={uploading}
               saving={saving}
+              generatingDescription={generatingDescription}
             />
           </DialogContent>
         </Dialog>
@@ -342,6 +421,7 @@ export const ProductManager = () => {
               onImageUpload={handleImageUpload}
               uploading={uploading}
               saving={saving}
+              generatingDescription={generatingDescription}
             />
           </DialogContent>
         </Dialog>
@@ -350,7 +430,7 @@ export const ProductManager = () => {
   );
 };
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving }: any) => (
+const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving, generatingDescription }: any) => (
   <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
@@ -386,14 +466,22 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
 
     <div>
       <Label htmlFor="description" className="text-sm">Description</Label>
-      <Textarea
-        id="description"
-        value={formData.description}
-        onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
-        rows={3}
-        className="text-sm"
-        placeholder="Enter product description"
-      />
+      <div className="relative">
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
+          rows={3}
+          className="text-sm"
+          placeholder="Enter product description (or upload image for AI generation)"
+        />
+        {generatingDescription && (
+          <div className="absolute top-2 right-2 flex items-center gap-2 text-blue-600">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-xs">Generating AI description...</span>
+          </div>
+        )}
+      </div>
     </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -451,7 +539,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
             className="text-sm"
           />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Or upload:</span>
+            <span className="text-xs text-gray-500">Or upload (auto-compressed):</span>
             <Input
               type="file"
               accept="image/*"
@@ -465,8 +553,8 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           </div>
           {uploading && (
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-xs text-blue-600">Uploading image...</p>
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+              <p className="text-xs text-blue-600">Compressing and uploading image...</p>
             </div>
           )}
           {formData.image_url && (
@@ -555,14 +643,22 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
       </div>
     </div>
 
-    <Button type="submit" className="w-full text-sm" disabled={uploading || saving}>
+    <Button type="submit" className="w-full text-sm" disabled={uploading || saving || generatingDescription}>
       {saving ? (
         <>
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
           Saving Product...
         </>
       ) : uploading ? (
-        'Uploading...'
+        <>
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          Uploading Image...
+        </>
+      ) : generatingDescription ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          Generating Description...
+        </>
       ) : (
         'Save Product'
       )}

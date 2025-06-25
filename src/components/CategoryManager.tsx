@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Image, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, AlertTriangle, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,35 +110,45 @@ export const CategoryManager = () => {
       setDeleting(categoryId);
       console.log('Attempting to delete category:', categoryId, categoryName);
       
-      // First check if category exists
-      const { data: existingCategory, error: checkError } = await supabase
-        .from('categories')
+      // First, check if any products are using this category
+      const { data: productsInCategory, error: checkError } = await supabase
+        .from('products')
         .select('id, name')
-        .eq('id', categoryId)
-        .single();
+        .eq('category_id', categoryId);
 
       if (checkError) {
-        console.error('Error checking category:', checkError);
-        throw new Error('Category not found');
+        console.error('Error checking for products in category:', checkError);
+        throw new Error('Failed to check category usage');
       }
 
-      console.log('Found category to delete:', existingCategory);
+      if (productsInCategory && productsInCategory.length > 0) {
+        const productNames = productsInCategory.map(p => p.name).join(', ');
+        toast.error(`Cannot delete category "${categoryName}" because it contains products: ${productNames}. Please reassign or delete these products first.`);
+        return;
+      }
 
-      // Delete the category
-      const { error: deleteError } = await supabase
+      // Proceed with deletion
+      const { error: deleteError, count } = await supabase
         .from('categories')
         .delete()
-        .eq('id', categoryId);
+        .eq('id', categoryId)
+        .select('id', { count: 'exact' });
 
       if (deleteError) {
         console.error('Delete error:', deleteError);
         throw deleteError;
       }
 
-      console.log('Category deleted successfully from database');
+      console.log('Category deletion result:', { deletedCount: count });
       
-      // Refresh categories immediately
-      await refreshCategories();
+      if (count === 0) {
+        throw new Error('Category not found or already deleted');
+      }
+
+      // Force refresh of categories with a slight delay to ensure database consistency
+      setTimeout(async () => {
+        await refreshCategories();
+      }, 500);
       
       toast.success(`Category "${categoryName}" deleted successfully`);
     } catch (error) {
@@ -149,10 +159,17 @@ export const CategoryManager = () => {
     }
   };
 
+  const handleCancel = () => {
+    setEditingCategory(null);
+    setIsAddDialogOpen(false);
+    setFormData({ name: '', description: '', image_url: '' });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading categories...</div>
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2 text-lg">Loading categories...</span>
       </div>
     );
   }
@@ -180,6 +197,7 @@ export const CategoryManager = () => {
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
               uploading={uploading}
+              onCancel={handleCancel}
             />
           </DialogContent>
         </Dialog>
@@ -229,17 +247,29 @@ export const CategoryManager = () => {
                   disabled={deleting === category.id}
                 >
                   {deleting === category.id ? (
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      Deleting...
+                    </>
                   ) : (
-                    <Trash2 className="w-3 h-3 mr-1" />
+                    <>
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Delete
+                    </>
                   )}
-                  {deleting === category.id ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {categories.length === 0 && (
+        <div className="text-center py-12">
+          <Image className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">No categories yet. Add your first category to get started.</p>
+        </div>
+      )}
 
       {editingCategory && (
         <Dialog open={true} onOpenChange={() => setEditingCategory(null)}>
@@ -253,6 +283,7 @@ export const CategoryManager = () => {
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
               uploading={uploading}
+              onCancel={handleCancel}
             />
           </DialogContent>
         </Dialog>
@@ -261,7 +292,7 @@ export const CategoryManager = () => {
   );
 };
 
-const CategoryForm = ({ formData, setFormData, onSubmit, onImageUpload, uploading }: any) => (
+const CategoryForm = ({ formData, setFormData, onSubmit, onImageUpload, uploading, onCancel }: any) => (
   <form onSubmit={onSubmit} className="space-y-4">
     <div>
       <Label htmlFor="name" className="text-sm">Category Name *</Label>
@@ -312,14 +343,41 @@ const CategoryForm = ({ formData, setFormData, onSubmit, onImageUpload, uploadin
           />
         </div>
         {uploading && (
-          <p className="text-xs text-blue-600">Uploading image...</p>
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+            <p className="text-xs text-blue-600">Uploading image...</p>
+          </div>
+        )}
+        {formData.image_url && (
+          <div className="mt-2">
+            <img
+              src={formData.image_url}
+              alt="Preview"
+              className="w-20 h-20 object-cover rounded border"
+            />
+          </div>
         )}
       </div>
     </div>
 
-    <Button type="submit" className="w-full text-sm" disabled={uploading}>
-      <Save className="w-4 h-4 mr-2" />
-      Save Category
-    </Button>
+    <div className="flex gap-3">
+      <Button type="submit" className="flex-1 text-sm" disabled={uploading}>
+        {uploading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            Uploading...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            Save Category
+          </>
+        )}
+      </Button>
+      <Button type="button" variant="outline" onClick={onCancel} className="text-sm">
+        <X className="w-4 h-4 mr-2" />
+        Cancel
+      </Button>
+    </div>
   </form>
 );
