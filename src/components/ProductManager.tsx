@@ -54,24 +54,6 @@ export const ProductManager = () => {
       const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       console.log('Uploading to Supabase storage...');
-      
-      // First, check if the bucket exists or create it
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === 'product-images');
-      
-      if (!bucketExists) {
-        console.log('Creating product-images bucket...');
-        const { error: bucketError } = await supabase.storage.createBucket('product-images', {
-          public: true,
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-          fileSizeLimit: 5242880 // 5MB
-        });
-        
-        if (bucketError) {
-          console.error('Error creating bucket:', bucketError);
-          throw new Error('Failed to create storage bucket');
-        }
-      }
 
       const { data, error } = await supabase.storage
         .from('product-images')
@@ -338,7 +320,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Input
           id="name"
           value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, name: e.target.value }))}
           required
           className="text-sm"
           placeholder="Enter product name"
@@ -348,13 +330,13 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Label htmlFor="category" className="text-sm">Category</Label>
         <Select
           value={formData.category_id}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+          onValueChange={(value) => setFormData((prev: any) => ({ ...prev, category_id: value }))}
         >
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
+            {categories.map((category: any) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
               </SelectItem>
@@ -369,7 +351,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
       <Textarea
         id="description"
         value={formData.description}
-        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+        onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
         rows={3}
         className="text-sm"
         placeholder="Enter product description"
@@ -385,7 +367,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           step="0.01"
           min="0"
           value={formData.price}
-          onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, price: e.target.value }))}
           required
           className="text-sm"
           placeholder="0.00"
@@ -399,7 +381,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           step="0.01"
           min="0"
           value={formData.original_price}
-          onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, original_price: e.target.value }))}
           className="text-sm"
           placeholder="0.00"
         />
@@ -411,7 +393,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           type="number"
           min="0"
           value={formData.stock_quantity}
-          onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, stock_quantity: e.target.value }))}
           className="text-sm"
           placeholder="0"
         />
@@ -426,7 +408,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
             id="image_url"
             type="url"
             value={formData.image_url}
-            onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, image_url: e.target.value }))}
             placeholder="Enter image URL or upload below"
             className="text-sm"
           />
@@ -469,7 +451,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Input
           id="sku"
           value={formData.sku}
-          onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, sku: e.target.value }))}
           placeholder="Product SKU"
           className="text-sm"
         />
@@ -481,7 +463,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Label htmlFor="status" className="text-sm">Status</Label>
         <Select
           value={formData.status}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+          onValueChange={(value) => setFormData((prev: any) => ({ ...prev, status: value }))}
         >
           <SelectTrigger className="text-sm">
             <SelectValue />
@@ -501,7 +483,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           step="0.01"
           min="0"
           value={formData.weight}
-          onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, weight: e.target.value }))}
           className="text-sm"
           placeholder="0.00"
         />
@@ -513,7 +495,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Switch
           id="featured"
           checked={formData.is_featured}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: checked }))}
+          onCheckedChange={(checked) => setFormData((prev: any) => ({ ...prev, is_featured: checked }))}
         />
         <Label htmlFor="featured" className="text-sm">Featured</Label>
       </div>
@@ -521,7 +503,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Switch
           id="new_arrival"
           checked={formData.is_new_arrival}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_new_arrival: checked }))}
+          onCheckedChange={(checked) => setFormData((prev: any) => ({ ...prev, is_new_arrival: checked }))}
         />
         <Label htmlFor="new_arrival" className="text-sm">New Arrival</Label>
       </div>
@@ -529,7 +511,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <Switch
           id="on_sale"
           checked={formData.is_on_sale}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_on_sale: checked }))}
+          onCheckedChange={(checked) => setFormData((prev: any) => ({ ...prev, is_on_sale: checked }))}
         />
         <Label htmlFor="on_sale" className="text-sm">On Sale</Label>
       </div>
