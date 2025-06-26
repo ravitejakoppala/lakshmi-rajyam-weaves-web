@@ -2,6 +2,7 @@
 import { X, Heart, ShoppingBag } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCart } from '../hooks/useCart';
+import { toast } from 'sonner';
 
 interface FavoritesModalProps {
   onClose: () => void;
@@ -12,12 +13,18 @@ export const FavoritesModal = ({ onClose }: FavoritesModalProps) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = (item: any) => {
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      category: item.category
-    });
+    try {
+      addToCart({
+        id: item.id.toString(),
+        name: item.name,
+        price: item.price,
+        image: 'placeholder'
+      });
+      toast.success(`${item.name} added to cart!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add item to cart');
+    }
   };
 
   return (

@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 // Image compression utility
 const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
+  return new Promise<Blob>((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     const img = new Image();
