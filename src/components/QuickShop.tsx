@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ArrowRight, Star, Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -73,7 +72,6 @@ export const QuickShop = () => {
         name: product.name,
         price: product.price,
         image: product.image,
-        quantity: 1
       });
       toast.success(`${product.name} added to cart!`);
     } catch (error) {

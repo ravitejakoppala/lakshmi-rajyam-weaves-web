@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Image, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -14,7 +13,7 @@ import { toast } from 'sonner';
 
 // Image compression utility
 const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     const img = new Image();
@@ -27,9 +26,16 @@ const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8
       canvas.height = height * ratio;
       
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(resolve, 'image/jpeg', quality);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to compress image'));
+        }
+      }, 'image/jpeg', quality);
     };
     
+    img.onerror = () => reject(new Error('Failed to load image'));
     img.src = URL.createObjectURL(file);
   });
 };
@@ -92,7 +98,7 @@ export const ProductManager = () => {
 
       // Compress image
       const compressedBlob = await compressImage(file);
-      const compressedFile = new File([compressedBlob!], file.name, { type: 'image/jpeg' });
+      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
       
       console.log('Image compressed from', file.size, 'to', compressedFile.size);
 

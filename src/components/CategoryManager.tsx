@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Save, X, Image, AlertTriangle, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
