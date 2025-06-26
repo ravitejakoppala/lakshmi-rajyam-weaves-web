@@ -12,12 +12,21 @@ export interface CartItem {
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem('cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
+    try {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error);
+    }
   }, [cartItems]);
 
   const addToCart = (item: Omit<CartItem, 'quantity' | 'addedAt'>) => {
@@ -35,7 +44,10 @@ export const useCart = () => {
   };
 
   const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+    setCartItems(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      return updated;
+    });
   };
 
   const updateQuantity = (id: string, quantity: number) => {

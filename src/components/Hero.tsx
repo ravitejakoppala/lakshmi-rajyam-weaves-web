@@ -61,19 +61,19 @@ export const Hero = () => {
                 </Link>
               </div>
 
-              {/* Stats */}
-              <div className="flex flex-wrap gap-6 pt-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">1000+</div>
-                  <div className="text-gray-400 text-sm">Happy Customers</div>
+              {/* Stats - Improved responsive design for tablets */}
+              <div className="flex flex-wrap gap-4 sm:gap-6 pt-4">
+                <div className="text-center min-w-[80px] sm:min-w-[100px]">
+                  <div className="text-xl sm:text-2xl font-bold text-white">1000+</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">Happy Customers</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">500+</div>
-                  <div className="text-gray-400 text-sm">Unique Designs</div>
+                <div className="text-center min-w-[80px] sm:min-w-[100px]">
+                  <div className="text-xl sm:text-2xl font-bold text-white">500+</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">Unique Designs</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">50+</div>
-                  <div className="text-gray-400 text-sm">Years Legacy</div>
+                <div className="text-center min-w-[80px] sm:min-w-[100px]">
+                  <div className="text-xl sm:text-2xl font-bold text-white">50+</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">Years Legacy</div>
                 </div>
               </div>
             </div>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Image, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -15,7 +16,12 @@ import { toast } from 'sonner';
 const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
   return new Promise<Blob>((resolve, reject) => {
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      reject(new Error('Could not get canvas context'));
+      return;
+    }
+    
     const img = new Image();
     
     img.onload = () => {
