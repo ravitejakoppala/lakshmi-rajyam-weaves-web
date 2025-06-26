@@ -102,7 +102,8 @@ export const CategoryManager = () => {
   };
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
+    const confirmed = window.confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`);
+    if (!confirmed) {
       return;
     }
 

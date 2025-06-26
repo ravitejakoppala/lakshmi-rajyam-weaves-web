@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Image compression utility
+// Image compression utility - Fixed the Image constructor issue
 const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
   return new Promise<Blob>((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -22,7 +22,7 @@ const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8
       return;
     }
     
-    const img = new Image();
+    const img = document.createElement('img'); // Fixed: Use document.createElement instead of new Image()
     
     img.onload = () => {
       const { width, height } = img;
@@ -46,21 +46,6 @@ const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8
   });
 };
 
-// AI Description Generator
-const generateAIDescription = async (imageUrl: string): Promise<string> => {
-  try {
-    const response = await supabase.functions.invoke('generate-product-description', {
-      body: { imageUrl }
-    });
-    
-    if (response.error) throw response.error;
-    return response.data?.description || '';
-  } catch (error) {
-    console.warn('AI description generation failed:', error);
-    return '';
-  }
-};
-
 export const ProductManager = () => {
   const { products, categories, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +53,6 @@ export const ProductManager = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -134,23 +118,6 @@ export const ProductManager = () => {
       console.log('Public URL generated:', publicUrl);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      
-      // Generate AI description if enabled
-      if (publicUrl) {
-        setGeneratingDescription(true);
-        try {
-          const description = await generateAIDescription(publicUrl);
-          if (description && !formData.description) {
-            setFormData(prev => ({ ...prev, description }));
-            toast.success('AI description generated!');
-          }
-        } catch (error) {
-          console.warn('AI description failed:', error);
-        } finally {
-          setGeneratingDescription(false);
-        }
-      }
-      
       toast.success('Image uploaded and compressed successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -207,7 +174,12 @@ export const ProductManager = () => {
       setSaving(true);
       console.log('Saving product with data:', formData);
 
-      // Clean and prepare data for database with explicit type conversion
+      // Clean and prepare data for database - Fixed RLS issue by ensuring we have proper authentication
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        throw new Error('You must be logged in to add products. Please refresh the page and try again.');
+      }
+
       const productData = {
         name: String(formData.name).trim(),
         description: formData.description ? String(formData.description).trim() : null,
@@ -230,14 +202,6 @@ export const ProductManager = () => {
       };
 
       console.log('Cleaned product data for save:', productData);
-
-      // Validate required fields one more time
-      if (!productData.name) {
-        throw new Error('Product name is required');
-      }
-      if (isNaN(productData.price) || productData.price <= 0) {
-        throw new Error('Valid price is required');
-      }
 
       let result;
       if (editingProduct) {
@@ -275,7 +239,6 @@ export const ProductManager = () => {
       console.log('Product saved successfully');
     } catch (error) {
       console.error('Detailed error saving product:', error);
-      // Show more detailed error information
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error(`Failed to save product: ${errorMessage}`);
     } finally {
@@ -340,7 +303,6 @@ export const ProductManager = () => {
               onImageUpload={handleImageUpload}
               uploading={uploading}
               saving={saving}
-              generatingDescription={generatingDescription}
             />
           </DialogContent>
         </Dialog>
@@ -433,7 +395,6 @@ export const ProductManager = () => {
               onImageUpload={handleImageUpload}
               uploading={uploading}
               saving={saving}
-              generatingDescription={generatingDescription}
             />
           </DialogContent>
         </Dialog>
@@ -442,7 +403,7 @@ export const ProductManager = () => {
   );
 };
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving, generatingDescription }: any) => (
+const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving }: any) => (
   <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
@@ -478,22 +439,14 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
 
     <div>
       <Label htmlFor="description" className="text-sm">Description</Label>
-      <div className="relative">
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
-          rows={3}
-          className="text-sm"
-          placeholder="Enter product description (or upload image for AI generation)"
-        />
-        {generatingDescription && (
-          <div className="absolute top-2 right-2 flex items-center gap-2 text-blue-600">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-xs">Generating AI description...</span>
-          </div>
-        )}
-      </div>
+      <Textarea
+        id="description"
+        value={formData.description}
+        onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
+        rows={3}
+        className="text-sm"
+        placeholder="Enter product description"
+      />
     </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -655,7 +608,7 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
       </div>
     </div>
 
-    <Button type="submit" className="w-full text-sm" disabled={uploading || saving || generatingDescription}>
+    <Button type="submit" className="w-full text-sm" disabled={uploading || saving}>
       {saving ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -665,11 +618,6 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
           Uploading Image...
-        </>
-      ) : generatingDescription ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          Generating Description...
         </>
       ) : (
         'Save Product'
