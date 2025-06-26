@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Save, X, Image, AlertTriangle, Loader2 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -102,8 +101,7 @@ export const CategoryManager = () => {
   };
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    const confirmMessage = `Are you sure you want to delete "${categoryName}"? This action cannot be undone.`;
-    if (!confirm(confirmMessage)) {
+    if (!confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
       return;
     }
 
