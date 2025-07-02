@@ -15,7 +15,7 @@ export const FavoritesModal = ({ onClose }: FavoritesModalProps) => {
   const handleAddToCart = (item: any) => {
     try {
       addToCart({
-        id: item.id.toString(),
+        id: item.id,
         name: item.name,
         price: item.price,
         image: 'placeholder'

@@ -58,6 +58,7 @@ export const ProductManager = () => {
     description: '',
     price: '',
     original_price: '',
+    discount_percentage: 0,
     category_id: '',
     stock_quantity: '',
     image_url: '',
@@ -218,6 +219,7 @@ export const ProductManager = () => {
         description: '',
         price: '',
         original_price: '',
+        discount_percentage: 0,
         category_id: '',
         stock_quantity: '',
         image_url: '',
@@ -250,6 +252,7 @@ export const ProductManager = () => {
       description: product.description || '',
       price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
+      discount_percentage: product.discount_percentage || 0,
       category_id: product.category_id || '',
       stock_quantity: product.stock_quantity?.toString() || '',
       image_url: product.image_url || '',
@@ -461,16 +464,25 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
         />
       </div>
       <div>
-        <Label htmlFor="original_price" className="text-sm">Original Price</Label>
+        <Label htmlFor="discount_percentage" className="text-sm">Discount Percentage</Label>
         <Input
-          id="original_price"
+          id="discount_percentage"
           type="number"
-          step="0.01"
           min="0"
-          value={formData.original_price}
-          onChange={(e) => setFormData((prev: any) => ({ ...prev, original_price: e.target.value }))}
+          max="90"
+          value={formData.discount_percentage || ''}
+          onChange={(e) => {
+            const discount = parseFloat(e.target.value) || 0;
+            const price = parseFloat(formData.price) || 0;
+            const originalPrice = price / (1 - discount / 100);
+            setFormData((prev: any) => ({ 
+              ...prev, 
+              discount_percentage: discount,
+              original_price: originalPrice > 0 ? originalPrice.toFixed(2) : ''
+            }));
+          }}
           className="text-sm"
-          placeholder="0.00"
+          placeholder="0"
         />
       </div>
       <div>

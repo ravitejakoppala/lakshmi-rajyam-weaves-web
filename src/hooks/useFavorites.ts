@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 export interface FavoriteItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   category: string;
@@ -11,12 +11,29 @@ export interface FavoriteItem {
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<FavoriteItem[]>(() => {
-    const stored = localStorage.getItem('favorites');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem('favorites');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.map((item: any) => ({
+          ...item,
+          addedAt: new Date(item.addedAt)
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error loading favorites from localStorage:', error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+    try {
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      console.log('Favorites saved to localStorage:', favorites);
+    } catch (error) {
+      console.error('Error saving favorites to localStorage:', error);
+    }
   }, [favorites]);
 
   const addToFavorites = (item: Omit<FavoriteItem, 'addedAt'>) => {
@@ -27,11 +44,16 @@ export const useFavorites = () => {
     });
   };
 
-  const removeFromFavorites = (id: number) => {
-    setFavorites(prev => prev.filter(fav => fav.id !== id));
+  const removeFromFavorites = (id: string) => {
+    console.log('Removing from favorites:', id);
+    setFavorites(prev => {
+      const updated = prev.filter(fav => fav.id !== id);
+      console.log('Favorites after removal:', updated);
+      return updated;
+    });
   };
 
-  const isFavorite = (id: number) => {
+  const isFavorite = (id: string) => {
     return favorites.some(fav => fav.id === id);
   };
 
