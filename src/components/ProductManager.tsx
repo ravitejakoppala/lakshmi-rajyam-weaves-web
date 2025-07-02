@@ -174,11 +174,7 @@ export const ProductManager = () => {
       setSaving(true);
       console.log('Saving product with data:', formData);
 
-      // Clean and prepare data for database - Fixed RLS issue by ensuring we have proper authentication
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        throw new Error('You must be logged in to add products. Please refresh the page and try again.');
-      }
+      // Clean and prepare data for database
 
       const productData = {
         name: String(formData.name).trim(),
