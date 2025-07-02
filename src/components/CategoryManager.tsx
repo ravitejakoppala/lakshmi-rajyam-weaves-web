@@ -131,9 +131,8 @@ export const CategoryManager = () => {
       // Proceed with deletion
       const { error: deleteError, count } = await supabase
         .from('categories')
-        .delete()
-        .eq('id', categoryId)
-        .select('id', { count: 'exact' });
+        .delete({ count: 'exact' })
+        .eq('id', categoryId);
 
       if (deleteError) {
         console.error('Delete error:', deleteError);
