@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useDeliverySettings } from '../hooks/useDeliverySettings';
-import { useCart } from '../hooks/useCart';
-import { useFavorites } from '../hooks/useFavorites';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
+import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
 import { useNavigation } from '../hooks/useNavigation';
 import { FavoritesModal } from './FavoritesModal';
 import { CartModal } from './CartModal';
-import { ProfileModal } from './ProfileModal';
+import { AuthModal } from './AuthModal';
 import { AdminLogin } from './AdminLogin';
 import { TopBar } from './header/TopBar';
 import { Navigation } from './header/Navigation';
@@ -26,8 +26,8 @@ export const Header = () => {
   
   const { theme, toggleTheme } = useTheme();
   const { settings: deliverySettings } = useDeliverySettings();
-  const { getTotalItems } = useCart();
-  const { favorites } = useFavorites();
+  const { getTotalItems } = useSupabaseCart();
+  const { favorites } = useSupabaseFavorites();
   const { categories } = useNavigation();
 
   return (
@@ -76,7 +76,7 @@ export const Header = () => {
       {/* Modals */}
       {showFavorites && <FavoritesModal onClose={() => setShowFavorites(false)} />}
       {showCart && <CartModal onClose={() => setShowCart(false)} />}
-      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showProfile && <AuthModal onClose={() => setShowProfile(false)} />}
       {showAdmin && <AdminLogin onClose={() => setShowAdmin(false)} />}
     </header>
   );

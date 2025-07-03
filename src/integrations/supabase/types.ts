@@ -277,32 +277,76 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          avatar_url: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
           id: string
+          is_verified: boolean | null
+          last_login: string | null
           phone: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          is_verified?: boolean | null
+          last_login?: string | null
           phone?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          is_verified?: boolean | null
+          last_login?: string | null
           phone?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      security_questions: {
+        Row: {
+          answer_hash: string
+          created_at: string | null
+          id: string
+          question: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          answer_hash: string
+          created_at?: string | null
+          id?: string
+          question: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          answer_hash?: string
+          created_at?: string | null
+          id?: string
+          question?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_questions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

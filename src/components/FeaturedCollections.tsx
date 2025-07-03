@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { ArrowRight, Heart, ShoppingBag, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
-import { useCart } from '../hooks/useCart';
-import { useFavorites } from '../hooks/useFavorites';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
+import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
 import { toast } from 'sonner';
 
 export const FeaturedCollections = () => {
   const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   
-  const { addToCart } = useCart();
-  const { addToFavorites, isFavorite } = useFavorites();
+  const { addToCart } = useSupabaseCart();
+  const { addToFavorites, isFavorite } = useSupabaseFavorites();
 
   // Simulate loading time
   useState(() => {

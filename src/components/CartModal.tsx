@@ -1,13 +1,13 @@
 
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 
 interface CartModalProps {
   onClose: () => void;
 }
 
 export const CartModal = ({ onClose }: CartModalProps) => {
-  const { cartItems, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useSupabaseCart();
 
   const handleCheckout = () => {
     // Implement checkout logic here

@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { ArrowRight, Star, Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import { toast } from 'sonner';
 
 export const QuickShop = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
 
   // Simulate loading time
   useEffect(() => {

@@ -1,7 +1,7 @@
 
 import { X, Heart, ShoppingBag } from 'lucide-react';
-import { useFavorites } from '../hooks/useFavorites';
-import { useCart } from '../hooks/useCart';
+import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
+import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import { toast } from 'sonner';
 
 interface FavoritesModalProps {
@@ -9,8 +9,8 @@ interface FavoritesModalProps {
 }
 
 export const FavoritesModal = ({ onClose }: FavoritesModalProps) => {
-  const { favorites, removeFromFavorites } = useFavorites();
-  const { addToCart } = useCart();
+  const { favorites, removeFromFavorites } = useSupabaseFavorites();
+  const { addToCart } = useSupabaseCart();
 
   const handleAddToCart = (item: any) => {
     try {
