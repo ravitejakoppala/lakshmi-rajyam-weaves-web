@@ -5,6 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useDeliverySettings } from '../hooks/useDeliverySettings';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
+import { useNavigation } from '../hooks/useNavigation';
 import { FavoritesModal } from './FavoritesModal';
 import { CartModal } from './CartModal';
 import { ProfileModal } from './ProfileModal';
@@ -27,15 +28,7 @@ export const Header = () => {
   const { settings: deliverySettings } = useDeliverySettings();
   const { getTotalItems } = useCart();
   const { favorites } = useFavorites();
-
-  const categories = [
-    { name: 'Kanjivaram', path: '/category/kanjivaram' },
-    { name: 'Kalamkari', path: '/category/kalamkari' },
-    { name: 'Bandhani', path: '/category/bandhani' },
-    { name: 'Block Print', path: '/category/block-print' },
-    { name: 'New Arrivals', path: '/new-arrivals' },
-    { name: 'Sale', path: '/sale' }
-  ];
+  const { categories } = useNavigation();
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">

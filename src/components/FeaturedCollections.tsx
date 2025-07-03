@@ -3,10 +3,16 @@ import { useState } from 'react';
 import { ArrowRight, Heart, ShoppingBag, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
+import { useCart } from '../hooks/useCart';
+import { useFavorites } from '../hooks/useFavorites';
+import { toast } from 'sonner';
 
 export const FeaturedCollections = () => {
   const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { addToCart } = useCart();
+  const { addToFavorites, isFavorite } = useFavorites();
 
   // Simulate loading time
   useState(() => {
@@ -59,6 +65,40 @@ export const FeaturedCollections = () => {
 
   const handleCollectionClick = (path: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddToFavorites = (collection: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      addToFavorites({
+        id: collection.id.toString(),
+        name: collection.name,
+        price: parseInt(collection.price.replace(/[₹,]/g, '')),
+        category: 'Featured Collection'
+      });
+      toast.success(`${collection.name} added to favorites!`);
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      toast.error('Failed to add to favorites');
+    }
+  };
+
+  const handleAddToCart = (collection: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      addToCart({
+        id: collection.id.toString(),
+        name: collection.name,
+        price: parseInt(collection.price.replace(/[₹,]/g, '')),
+        image: collection.image
+      });
+      toast.success(`${collection.name} added to cart!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add to cart');
+    }
   };
 
   if (isLoading) {
@@ -128,11 +168,21 @@ export const FeaturedCollections = () => {
                   </span>
                 </div>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button className="p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors">
-                    <Heart className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                  <button 
+                    onClick={(e) => handleAddToFavorites(collection, e)}
+                    className={`p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors ${
+                      isFavorite(collection.id.toString()) ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                    title="Add to Favorites"
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite(collection.id.toString()) ? 'fill-current' : ''}`} />
                   </button>
-                  <button className="p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors">
-                    <ShoppingBag className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                  <button 
+                    onClick={(e) => handleAddToCart(collection, e)}
+                    className="p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-500"
+                    title="Add to Cart"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

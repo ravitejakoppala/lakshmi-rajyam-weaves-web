@@ -32,10 +32,7 @@ export const useCart = () => {
   // Save to localStorage whenever cartItems changes
   useEffect(() => {
     try {
-      // Clean the cart data before saving
-      const cleanCartItems = cartItems.filter(item => item && item.id && item.name);
-      localStorage.setItem('cart', JSON.stringify(cleanCartItems));
-      console.log('Cart saved to localStorage:', cleanCartItems);
+      localStorage.setItem('cart', JSON.stringify(cartItems));
     } catch (error) {
       console.error('Error saving cart to localStorage:', error);
     }
