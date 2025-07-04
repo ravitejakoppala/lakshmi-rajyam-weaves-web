@@ -35,29 +35,31 @@ export const Header = () => {
       <TopBar deliverySettings={deliverySettings} />
 
       {/* Main Header */}
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 min-w-0">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
               Lakshmi Rajyam
             </div>
           </Link>
 
           <Navigation categories={categories} />
 
-          <ActionButtons
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            onSearchClick={() => setIsSearchOpen(true)}
-            onAdminClick={() => setShowAdmin(true)}
-            onFavoritesClick={() => setShowFavorites(true)}
-            onCartClick={() => setShowCart(true)}
-            onProfileClick={() => setShowProfile(true)}
-            onMenuClick={() => setIsMenuOpen(true)}
-            favoritesCount={favorites.length}
-            cartItemsCount={getTotalItems()}
-          />
+          <div className="flex-shrink-0">
+            <ActionButtons
+              theme={theme}
+              onToggleTheme={toggleTheme}
+              onSearchClick={() => setIsSearchOpen(true)}
+              onAdminClick={() => setShowAdmin(true)}
+              onFavoritesClick={() => setShowFavorites(true)}
+              onCartClick={() => setShowCart(true)}
+              onProfileClick={() => setShowProfile(true)}
+              onMenuClick={() => setIsMenuOpen(true)}
+              favoritesCount={favorites.length}
+              cartItemsCount={getTotalItems()}
+            />
+          </div>
         </div>
       </div>
 

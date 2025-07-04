@@ -125,6 +125,13 @@
     html, body {
       overflow-x: hidden;
       width: 100%;
+      max-width: 100vw;
+    }
+    
+    /* Ensure all elements don't overflow */
+    * {
+      max-width: 100%;
+      box-sizing: border-box;
     }
     
     /* Ensure touch targets are minimum 44px */
@@ -142,6 +149,26 @@
     h1, h2, h3, h4, h5, h6 {
       word-wrap: break-word;
       hyphens: auto;
+    }
+    
+    /* Fix background issues on zoom */
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Prevent text overflow */
+    .text-overflow-ellipsis {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+  
+  /* Extra small screens */
+  @media (min-width: 375px) {
+    .xs\:block {
+      display: block;
     }
   }
 }

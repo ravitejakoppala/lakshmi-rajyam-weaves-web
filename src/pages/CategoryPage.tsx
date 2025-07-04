@@ -66,10 +66,10 @@ export const CategoryPage = () => {
           </p>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Filters Sidebar */}
-          <div className="w-64 space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="w-full lg:w-64 space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Filter className="w-5 h-5" />
                 Filters
@@ -116,8 +116,8 @@ export const CategoryPage = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="flex-1">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
               {products.map((product) => (
                 <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   {/* Product Image */}
