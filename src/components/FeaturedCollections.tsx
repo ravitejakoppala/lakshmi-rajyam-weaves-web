@@ -12,7 +12,7 @@ export const FeaturedCollections = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   const { addToCart } = useSupabaseCart();
-  const { addToFavorites, isFavorite } = useSupabaseFavorites();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useSupabaseFavorites();
 
   // Simulate loading time
   useState(() => {
@@ -67,20 +67,29 @@ export const FeaturedCollections = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAddToFavorites = (collection: any, e: React.MouseEvent) => {
+  const handleToggleFavorites = (collection: any, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    const productId = collection.id.toString();
+    const isCurrentlyFavorite = isFavorite(productId);
+    
     try {
-      addToFavorites({
-        id: collection.id.toString(),
-        name: collection.name,
-        price: parseInt(collection.price.replace(/[₹,]/g, '')),
-        category: 'Featured Collection'
-      });
-      toast.success(`${collection.name} added to favorites!`);
+      if (isCurrentlyFavorite) {
+        removeFromFavorites(productId);
+        toast.success(`${collection.name} removed from favorites!`);
+      } else {
+        addToFavorites({
+          id: productId,
+          name: collection.name,
+          price: parseInt(collection.price.replace(/[₹,]/g, '')),
+          category: 'Featured Collection'
+        });
+        toast.success(`${collection.name} added to favorites!`);
+      }
     } catch (error) {
-      console.error('Error adding to favorites:', error);
-      toast.error('Failed to add to favorites');
+      console.error('Error toggling favorites:', error);
+      toast.error('Failed to update favorites');
     }
   };
 
@@ -169,11 +178,11 @@ export const FeaturedCollections = () => {
                 </div>
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button 
-                    onClick={(e) => handleAddToFavorites(collection, e)}
+                    onClick={(e) => handleToggleFavorites(collection, e)}
                     className={`p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors ${
                       isFavorite(collection.id.toString()) ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'
                     }`}
-                    title="Add to Favorites"
+                    title={isFavorite(collection.id.toString()) ? "Remove from Favorites" : "Add to Favorites"}
                   >
                     <Heart className={`w-4 h-4 ${isFavorite(collection.id.toString()) ? 'fill-current' : ''}`} />
                   </button>
