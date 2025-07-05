@@ -1,65 +1,27 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, Heart, ShoppingBag, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
 import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
+import { useProducts } from '../hooks/useProducts';
 import { toast } from 'sonner';
 
 export const FeaturedCollections = () => {
-  const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
   
   const { addToCart } = useSupabaseCart();
   const { addToFavorites, removeFromFavorites, isFavorite } = useSupabaseFavorites();
+  const { products, loading } = useProducts();
 
-  // Simulate loading time
-  useState(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  });
+  // Get featured products from database, fallback to any products if no featured ones
+  const featuredProducts = products.filter(product => product.is_featured).slice(0, 6);
+  const displayProducts = featuredProducts.length > 0 
+    ? featuredProducts 
+    : products.slice(0, 6); // Show first 6 products if no featured ones
 
-  const collections = [
-    {
-      id: 1,
-      name: "Wedding Collection",
-      description: "Exquisite bridal sarees for your special day",
-      image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&h=800&fit=crop",
-      price: "₹25,000",
-      originalPrice: "₹35,000",
-      discount: "30% OFF",
-      rating: 4.8,
-      reviews: 124,
-      path: "/category/wedding"
-    },
-    {
-      id: 2,
-      name: "Festival Special",
-      description: "Vibrant colors for celebration",
-      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&h=800&fit=crop",
-      price: "₹15,000",
-      originalPrice: "₹20,000",
-      discount: "25% OFF",
-      rating: 4.7,
-      reviews: 89,
-      path: "/category/festival"
-    },
-    {
-      id: 3,
-      name: "Premium Silk",
-      description: "Luxury handwoven silk collection",
-      image: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&h=800&fit=crop",
-      price: "₹40,000",
-      originalPrice: "₹50,000",
-      discount: "20% OFF",
-      rating: 4.9,
-      reviews: 156,
-      path: "/category/premium"
-    }
-  ];
-
-  const handleImageLoad = (id: number) => {
+  const handleImageLoad = (id: string) => {
     setImagesLoaded(prev => ({ ...prev, [id]: true }));
   };
 
@@ -67,25 +29,25 @@ export const FeaturedCollections = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleToggleFavorites = (collection: any, e: React.MouseEvent) => {
+  const handleToggleFavorites = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    const productId = collection.id.toString();
+    const productId = product.id;
     const isCurrentlyFavorite = isFavorite(productId);
     
     try {
       if (isCurrentlyFavorite) {
         removeFromFavorites(productId);
-        toast.success(`${collection.name} removed from favorites!`);
+        toast.success(`${product.name} removed from favorites!`);
       } else {
         addToFavorites({
           id: productId,
-          name: collection.name,
-          price: parseInt(collection.price.replace(/[₹,]/g, '')),
-          category: 'Featured Collection'
+          name: product.name,
+          price: product.price,
+          category: 'Featured Product'
         });
-        toast.success(`${collection.name} added to favorites!`);
+        toast.success(`${product.name} added to favorites!`);
       }
     } catch (error) {
       console.error('Error toggling favorites:', error);
@@ -93,24 +55,30 @@ export const FeaturedCollections = () => {
     }
   };
 
-  const handleAddToCart = (collection: any, e: React.MouseEvent) => {
+  const handleAddToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     try {
       addToCart({
-        id: collection.id.toString(),
-        name: collection.name,
-        price: parseInt(collection.price.replace(/[₹,]/g, '')),
-        image: collection.image
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image_url
       });
-      toast.success(`${collection.name} added to cart!`);
+      toast.success(`${product.name} added to cart!`);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add to cart');
     }
   };
 
-  if (isLoading) {
+  const formatPrice = (price: number) => `₹${price.toLocaleString()}`;
+  const calculateDiscount = (price: number, originalPrice: number | null) => {
+    if (!originalPrice || originalPrice <= price) return null;
+    return Math.round(((originalPrice - price) / originalPrice) * 100);
+  };
+
+  if (loading) {
     return (
       <section className="py-20 bg-white dark:bg-gray-800 transition-colors duration-200">
         <div className="container mx-auto px-6 lg:px-8">
@@ -152,84 +120,99 @@ export const FeaturedCollections = () => {
 
         {/* Collections Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {collections.map((collection, index) => (
-            <div
-              key={collection.id}
-              className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Image */}
-              <div className="relative h-80 overflow-hidden">
-                {!imagesLoaded[collection.id] && (
-                  <Skeleton className="absolute inset-0 w-full h-full" />
-                )}
-                <img
-                  src={collection.image}
-                  alt={collection.name}
-                  className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
-                    imagesLoaded[collection.id] ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={() => handleImageLoad(collection.id)}
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {collection.discount}
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button 
-                    onClick={(e) => handleToggleFavorites(collection, e)}
-                    className={`p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors ${
-                      isFavorite(collection.id.toString()) ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'
-                    }`}
-                    title={isFavorite(collection.id.toString()) ? "Remove from Favorites" : "Add to Favorites"}
-                  >
-                    <Heart className={`w-4 h-4 ${isFavorite(collection.id.toString()) ? 'fill-current' : ''}`} />
-                  </button>
-                  <button 
-                    onClick={(e) => handleAddToCart(collection, e)}
-                    className="p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-500"
-                    title="Add to Cart"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{collection.rating}</span>
-                  </div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">({collection.reviews} reviews)</span>
-                </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {collection.name}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                  {collection.description}
-                </p>
-                
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">{collection.price}</span>
-                  <span className="text-lg text-gray-500 dark:text-gray-400 line-through">{collection.originalPrice}</span>
-                </div>
-
-                <Link
-                  to={collection.path}
-                  onClick={() => handleCollectionClick(collection.path)}
-                  className="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+          {displayProducts.length > 0 ? (
+            displayProducts.map((product, index) => {
+              const discount = calculateDiscount(product.price, product.original_price);
+              return (
+                <div
+                  key={product.id}
+                  className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-2xl dark:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  View Collection
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
+                  {/* Image */}
+                  <div className="relative h-80 overflow-hidden">
+                    {!imagesLoaded[product.id] && (
+                      <Skeleton className="absolute inset-0 w-full h-full" />
+                    )}
+                    <img
+                      src={product.image_url || 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&h=800&fit=crop'}
+                      alt={product.name}
+                      className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
+                        imagesLoaded[product.id] ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      onLoad={() => handleImageLoad(product.id)}
+                    />
+                    {discount && (
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          {discount}% OFF
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button 
+                        onClick={(e) => handleToggleFavorites(product, e)}
+                        className={`p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors ${
+                          isFavorite(product.id) ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'
+                        }`}
+                        title={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorite(product.id) ? 'fill-current' : ''}`} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleAddToCart(product, e)}
+                        className="p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 hover:text-blue-500"
+                        title="Add to Cart"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">4.5</span>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">(Reviews)</span>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      {product.name}
+                    </h3>
+                    {product.description && (
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                        {product.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(product.price)}</span>
+                      {product.original_price && product.original_price > product.price && (
+                        <span className="text-lg text-gray-500 dark:text-gray-400 line-through">{formatPrice(product.original_price)}</span>
+                      )}
+                    </div>
+
+                    <Link
+                      to={`/product/${product.id}`}
+                      onClick={() => handleCollectionClick(`/product/${product.id}`)}
+                      className="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                    >
+                      View Product
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">No featured products available.</p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* View All Button */}
