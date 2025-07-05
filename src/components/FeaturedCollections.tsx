@@ -6,6 +6,7 @@ import { Skeleton } from './ui/skeleton';
 import { useSupabaseCart } from '../hooks/useSupabaseCart';
 import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'sonner';
 
 export const FeaturedCollections = () => {
@@ -14,6 +15,7 @@ export const FeaturedCollections = () => {
   const { addToCart } = useSupabaseCart();
   const { addToFavorites, removeFromFavorites, isFavorite } = useSupabaseFavorites();
   const { products, loading } = useProducts();
+  const { isLoggedIn } = useAuth();
 
   // Get featured products from database, fallback to any products if no featured ones
   const featuredProducts = products.filter(product => product.is_featured).slice(0, 6);
@@ -33,8 +35,17 @@ export const FeaturedCollections = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('Favorites button clicked for product:', product.name, 'User logged in:', isLoggedIn);
+    
+    if (!isLoggedIn) {
+      toast.error('Please log in to add items to favorites');
+      return;
+    }
+    
     const productId = product.id;
     const isCurrentlyFavorite = isFavorite(productId);
+    
+    console.log('Product ID:', productId, 'Is favorite:', isCurrentlyFavorite);
     
     try {
       if (isCurrentlyFavorite) {
@@ -58,6 +69,14 @@ export const FeaturedCollections = () => {
   const handleAddToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    console.log('Cart button clicked for product:', product.name, 'User logged in:', isLoggedIn);
+    
+    if (!isLoggedIn) {
+      toast.error('Please log in to add items to cart');
+      return;
+    }
+    
     try {
       addToCart({
         id: product.id,
@@ -177,7 +196,7 @@ export const FeaturedCollections = () => {
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">4.5</span>
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">(Reviews)</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">(0 Reviews)</span>
                     </div>
                     
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
