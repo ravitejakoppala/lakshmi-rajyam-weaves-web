@@ -3,11 +3,15 @@ import { ArrowRight, Star, Heart, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from './ui/skeleton';
 import { useSupabaseCart } from '../hooks/useSupabaseCart';
+import { useSupabaseFavorites } from '../hooks/useSupabaseFavorites';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'sonner';
 
 export const QuickShop = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { addToCart } = useSupabaseCart();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useSupabaseFavorites();
+  const { isLoggedIn } = useAuth();
 
   // Simulate loading time
   useEffect(() => {
@@ -80,12 +84,35 @@ export const QuickShop = () => {
     }
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent, productId: number) => {
+  const handleToggleFavorite = (e: React.MouseEvent, product: any) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // TODO: Implement favorites functionality
-    toast.success('Added to favorites!');
+    if (!isLoggedIn) {
+      toast.error('Please log in to add items to favorites');
+      return;
+    }
+    
+    const productId = product.id.toString();
+    const isCurrentlyFavorite = isFavorite(productId);
+    
+    try {
+      if (isCurrentlyFavorite) {
+        removeFromFavorites(productId);
+        toast.success(`${product.name} removed from favorites!`);
+      } else {
+        addToFavorites({
+          id: productId,
+          name: product.name,
+          price: product.price,
+          category: product.category
+        });
+        toast.success(`${product.name} added to favorites!`);
+      }
+    } catch (error) {
+      console.error('Error toggling favorites:', error);
+      toast.error('Failed to update favorites');
+    }
   };
 
   if (isLoading) {
@@ -144,10 +171,12 @@ export const QuickShop = () => {
                   </span>
                 )}
                 <button 
-                  onClick={(e) => handleToggleFavorite(e, product.id)}
-                  className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors z-10 transform hover:scale-110 duration-200"
+                  onClick={(e) => handleToggleFavorite(e, product)}
+                  className={`absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors z-10 transform hover:scale-110 duration-200 ${
+                    isFavorite(product.id.toString()) ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'
+                  }`}
                 >
-                  <Heart className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <Heart className={`w-4 h-4 ${isFavorite(product.id.toString()) ? 'fill-current' : ''}`} />
                 </button>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-gray-500 dark:text-gray-400">

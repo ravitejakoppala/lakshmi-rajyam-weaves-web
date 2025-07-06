@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { X, Package, Settings, Truck, Star, Store, Grid3x3 } from 'lucide-react';
+import { X, Package, Settings, Truck, Star, Store, Grid3x3, Users } from 'lucide-react';
 import { ProductManager } from './ProductManager';
 import { NewArrivalsManager } from './NewArrivalsManager';
 import { StoreSettingsManager } from './StoreSettingsManager';
 import { DeliverySettingsManager } from './DeliverySettingsManager';
 import { SalesManager } from './SalesManager';
 import { CategoryManager } from './CategoryManager';
+import { CustomerManager } from './CustomerManager';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
   const tabs = [
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: Grid3x3 },
+    { id: 'customers', label: 'Customers', icon: Users },
     { id: 'new-arrivals', label: 'New Arrivals', icon: Star },
     { id: 'sales', label: 'Sales', icon: Settings },
     { id: 'delivery', label: 'Delivery Settings', icon: Truck },
@@ -89,6 +91,7 @@ export const AdminDashboard = ({ onClose }: AdminDashboardProps) => {
           <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
             {activeTab === 'products' && <ProductManager />}
             {activeTab === 'categories' && <CategoryManager />}
+            {activeTab === 'customers' && <CustomerManager />}
             {activeTab === 'new-arrivals' && <NewArrivalsManager />}
             {activeTab === 'sales' && <SalesManager />}
             {activeTab === 'delivery' && <DeliverySettingsManager />}

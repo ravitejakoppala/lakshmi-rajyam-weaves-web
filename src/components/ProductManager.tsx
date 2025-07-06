@@ -106,26 +106,40 @@ export const ProductManager = () => {
         });
 
       if (error) {
-        console.error('Upload error:', error);
-        throw new Error(error.message || 'Failed to upload image');
+        console.error('Supabase storage error:', error);
+        throw new Error(`Failed to upload image: ${error.message}`);
       }
 
-      console.log('Upload successful:', data);
+      console.log('Image uploaded successfully:', data);
 
-      const { data: { publicUrl } } = supabase.storage
+      // Get public URL
+      const { data: publicData } = supabase.storage
         .from('product-images')
         .getPublicUrl(fileName);
 
-      console.log('Public URL generated:', publicUrl);
+      const imageUrl = publicData.publicUrl;
+      console.log('Generated public URL:', imageUrl);
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      toast.success('Image uploaded and compressed successfully');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+      // Add to images array instead of replacing image_url
+      setFormData(prev => ({
+        ...prev,
+        images: [...(prev.images || []), imageUrl]
+      }));
+
+      toast.success('Image uploaded successfully!');
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      toast.error(error.message || 'Failed to upload image');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img !== imageUrl)
+    }));
   };
 
   const filteredProducts = products.filter(product =>
@@ -300,6 +314,7 @@ export const ProductManager = () => {
               categories={categories}
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
+              onRemoveImage={handleRemoveImage}
               uploading={uploading}
               saving={saving}
             />
@@ -392,6 +407,7 @@ export const ProductManager = () => {
               categories={categories}
               onSubmit={handleSubmit}
               onImageUpload={handleImageUpload}
+              onRemoveImage={handleRemoveImage}
               uploading={uploading}
               saving={saving}
             />
@@ -402,7 +418,7 @@ export const ProductManager = () => {
   );
 };
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, uploading, saving }: any) => (
+const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUpload, onRemoveImage, uploading, saving }: any) => (
   <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
@@ -499,42 +515,23 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
       </div>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:gap-4">
       <div>
-        <Label htmlFor="image_url" className="text-sm">Product Image</Label>
+        <Label htmlFor="image_url" className="text-sm">Main Product Image</Label>
         <div className="space-y-2">
           <Input
             id="image_url"
             type="url"
             value={formData.image_url}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, image_url: e.target.value }))}
-            placeholder="Enter image URL or upload below"
+            placeholder="Enter main image URL"
             className="text-sm"
           />
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Or upload (auto-compressed):</span>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && onImageUpload) onImageUpload(file);
-              }}
-              disabled={uploading}
-              className="text-xs"
-            />
-          </div>
-          {uploading && (
-            <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-              <p className="text-xs text-blue-600">Compressing and uploading image...</p>
-            </div>
-          )}
           {formData.image_url && (
             <div className="mt-2">
               <img
                 src={formData.image_url}
-                alt="Preview"
+                alt="Main Preview"
                 className="w-20 h-20 object-cover rounded border"
                 onError={(e) => {
                   console.error('Image preview error:', e);
@@ -545,6 +542,65 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, onImageUploa
           )}
         </div>
       </div>
+      
+      <div>
+        <Label className="text-sm">Additional Product Images</Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Upload multiple images:</span>
+            <Input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                files.forEach(file => {
+                  if (onImageUpload) onImageUpload(file);
+                });
+              }}
+              disabled={uploading}
+              className="text-xs"
+            />
+          </div>
+          {uploading && (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+              <p className="text-xs text-blue-600">Uploading images...</p>
+            </div>
+          )}
+          
+          {formData.images && formData.images.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-gray-600 mb-2">{formData.images.length} additional images:</p>
+              <div className="grid grid-cols-4 gap-2">
+                {formData.images.map((imageUrl: string, index: number) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`Additional ${index + 1}`}
+                      className="w-full h-16 object-cover rounded border"
+                      onError={(e) => {
+                        console.error('Image preview error:', e);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onRemoveImage && onRemoveImage(imageUrl)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <div>
         <Label htmlFor="sku" className="text-sm">SKU</Label>
         <Input
