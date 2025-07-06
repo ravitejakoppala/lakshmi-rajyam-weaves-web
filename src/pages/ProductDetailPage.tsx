@@ -14,6 +14,7 @@ export const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('Free Size');
   const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -113,10 +114,13 @@ export const ProductDetailPage = () => {
         <div className="grid lg:grid-cols-2 gap-4 sm:gap-12">
           {/* Product Images */}
           <div className="space-y-3 sm:space-y-4">
+            {/* Main Image */}
             <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-lg flex items-center justify-center">
-              {product.image_url ? (
+              {(product.image_url || (product.images && product.images.length > 0)) ? (
                 <img
-                  src={product.image_url}
+                  src={selectedImageIndex !== null && product.images && product.images.length > 0 
+                    ? product.images[selectedImageIndex] 
+                    : product.image_url || ''}
                   alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
@@ -129,6 +133,45 @@ export const ProductDetailPage = () => {
                 </div>
               )}
             </div>
+
+            {/* Image Thumbnails */}
+            {product.images && product.images.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {product.image_url && (
+                  <button
+                    onClick={() => setSelectedImageIndex(null)}
+                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImageIndex === null 
+                        ? 'border-blue-500' 
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <img
+                      src={product.image_url}
+                      alt={`${product.name} - Main`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                )}
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImageIndex === index 
+                        ? 'border-blue-500' 
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} - ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}

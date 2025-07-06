@@ -16,12 +16,20 @@ export const Footer = () => {
             </p>
             
             <div className="flex items-center gap-4">
-              <button className="bg-pink-600 hover:bg-pink-700 p-3 rounded-lg transition-colors duration-200">
+              <a 
+                href="https://instagram.com/lakshmirajyamsarees" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-pink-600 hover:bg-pink-700 p-3 rounded-lg transition-colors duration-200"
+              >
                 <Instagram className="w-5 h-5" />
-              </button>
-              <button className="bg-blue-600 hover:bg-blue-700 p-3 rounded-lg transition-colors duration-200">
+              </a>
+              <a 
+                href="mailto:lakshmirajyamsarees@gmail.com"
+                className="bg-blue-600 hover:bg-blue-700 p-3 rounded-lg transition-colors duration-200"
+              >
                 <Mail className="w-5 h-5" />
-              </button>
+              </a>
             </div>
           </div>
 
@@ -29,18 +37,26 @@ export const Footer = () => {
           <div>
             <h4 className="text-xl font-semibold mb-6">Contact Us</h4>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
+              <a 
+                href="https://maps.google.com/?q=Santinagar+3rd+Road,+Eluru+534007"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 hover:text-blue-400 transition-colors duration-200"
+              >
                 <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />
                 <div>
                   <p className="text-gray-300">Santinagar 3rd Road</p>
                   <p className="text-gray-300">Eluru 534007</p>
                 </div>
-              </div>
+              </a>
               
-              <div className="flex items-center gap-3">
+              <a 
+                href="tel:+919492607499"
+                className="flex items-center gap-3 hover:text-blue-400 transition-colors duration-200"
+              >
                 <Phone className="w-5 h-5 text-blue-400" />
                 <p className="text-gray-300">+91-94926-07499</p>
-              </div>
+              </a>
               
               <div className="flex items-start gap-3">
                 <Clock className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />

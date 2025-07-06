@@ -50,15 +50,23 @@ export const WhatsAppSupport = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                <a 
+                  href="https://wa.me/919492607499?text=Hello! I'm interested in your sarees collection."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                >
                   <MessageCircle className="w-6 h-6" />
                   Chat on WhatsApp
-                </button>
+                </a>
                 
-                <button className="flex items-center justify-center gap-3 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300">
+                <a 
+                  href="tel:+919492607499"
+                  className="flex items-center justify-center gap-3 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300"
+                >
                   <Phone className="w-6 h-6" />
                   Call Us
-                </button>
+                </a>
               </div>
 
               <div className="bg-white rounded-lg p-6 shadow-md">
